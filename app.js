@@ -42,6 +42,7 @@ const menuProfile = document.getElementById('menuProfile');
 const pageSearch = document.getElementById('pageSearch');
 const pageHistory = document.getElementById('pageHistory');
 const pageProfile = document.getElementById('pageProfile');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
 // Elemen Isian Profil & Tombol Pastel
 const profileEmailDisplay = document.getElementById('profileEmailDisplay');
@@ -520,7 +521,7 @@ async function renderHistory() {
     try {
         const { data: history, error } = await supabaseClient
             .from('history')
-            .select('keyword, result, created_at')
+            .select('id, keyword, result, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(10);
@@ -553,6 +554,8 @@ async function renderHistory() {
                     });
                 
             itemRow.innerHTML = `
+<div class="flex justify-between items-start w-full">
+
     <div class="flex items-start gap-3">
         <span class="text-slate-400">🕒</span>
 
@@ -567,9 +570,22 @@ async function renderHistory() {
         </div>
     </div>
 
-    <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">
-        Cari Lagi ↗
-    </span>
+    <div class="flex items-center gap-3">
+
+        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">
+            Cari Lagi ↗
+        </span>
+
+        <button
+            class="delete-history-btn text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition"
+            data-id="${item.id}"
+            title="Hapus Riwayat">
+            🗑️
+        </button>
+
+    </div>
+
+</div>
 `;
             
             itemRow.addEventListener('click', () => {
@@ -594,4 +610,36 @@ async function renderHistory() {
         console.error("Gagal memuat data dari Supabase:", error.message);
         historyListContainer.innerHTML = `<p class="text-rose-500 text-center py-4 text-xs">Gagal memuat riwayat pencarian.</p>`;
     }
+}
+
+if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', async () => {
+
+        const confirmDelete = confirm(
+            'Yakin ingin menghapus seluruh riwayat pencarian?'
+        );
+
+        if (!confirmDelete) return;
+
+        const { data: { user } } =
+            await supabaseClient.auth.getUser();
+
+        if (!user) return;
+
+        const { error } = await supabaseClient
+            .from('history')
+            .delete()
+            .eq('user_id', user.id);
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        showToastNotification(
+            'Semua riwayat berhasil dihapus!'
+        );
+
+        renderHistory();
+    });
 }
