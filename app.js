@@ -479,6 +479,12 @@ async function saveToHistory(word, result) {
     }
 
     try {
+        console.log("DATA YANG AKAN DISIMPAN");
+        console.log({
+        user_id: user.id,
+        keyword: word,
+        result: result
+        });
         const { error } = await supabaseClient
             .from('history') 
             .insert([
@@ -487,6 +493,11 @@ async function saveToHistory(word, result) {
                     keyword: word,
                     result: result
                 }
+                if (error) {
+    console.error(error);
+} else {
+    console.log("INSERT BERHASIL");
+}
             ]);
 
         if (error) throw error;
