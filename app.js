@@ -535,14 +535,41 @@ async function renderHistory() {
         history.forEach(item => {
             const itemRow = document.createElement('div');
             itemRow.className = "flex justify-between items-center py-3 hover:bg-slate-50 px-2 rounded-xl transition cursor-pointer group";
-            
+
+            history.forEach(item => {
+                const searchDate = new Date(item.created_at);
+
+                const formattedDate =
+                    searchDate.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    }) +
+                    ' • ' +
+                    searchDate.toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                
             itemRow.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <span class="text-slate-400">🕒</span>
-                    <span class="font-medium text-slate-700 group-hover:text-indigo-600 transition">${item.keyword}</span>
-                </div>
-                <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">Cari Lagi ↗</span>
-            `;
+    <div class="flex items-start gap-3">
+        <span class="text-slate-400">🕒</span>
+
+        <div>
+            <div class="font-medium text-slate-700 group-hover:text-indigo-600 transition">
+                ${item.keyword}
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+                ${formattedDate}
+            </div>
+        </div>
+    </div>
+
+    <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">
+        Cari Lagi ↗
+    </span>
+`;
             
             itemRow.addEventListener('click', () => {
     keywordInput.value = item.keyword;
