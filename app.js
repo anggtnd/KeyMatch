@@ -485,20 +485,22 @@ async function saveToHistory(word, result) {
         keyword: word,
         result: result
         });
+        
         const { error } = await supabaseClient
-            .from('history') 
-            .insert([
-                { 
-                    user_id: user.id, 
-                    keyword: word,
-                    result: result
-                }
-                if (error) {
+    .from('history')
+    .insert([
+        {
+            user_id: user.id,
+            keyword: word,
+            result: result
+        }
+    ]);
+
+if (error) {
     console.error(error);
 } else {
     console.log("INSERT BERHASIL");
 }
-            ]);
 
         if (error) throw error;
         renderHistory();
@@ -536,7 +538,6 @@ async function renderHistory() {
             const itemRow = document.createElement('div');
             itemRow.className = "flex justify-between items-center py-3 hover:bg-slate-50 px-2 rounded-xl transition cursor-pointer group";
 
-            history.forEach(item => {
                 const searchDate = new Date(item.created_at);
 
                 const formattedDate =
