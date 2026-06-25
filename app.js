@@ -171,7 +171,7 @@ async function fetchSynonyms() {
         return;
     }
 
-    saveToHistory(word);
+    
 
     loading.classList.remove('hidden');
     resultSection.classList.add('hidden');
@@ -221,6 +221,8 @@ async function fetchSynonyms() {
 
         const formattedQuery = `TITLE-ABS-KEY (${scopusWords.map(w => `"${w}"`).join(' OR ')})`;
         queryResult.value = formattedQuery;
+
+        await saveToHistory(word, formattedQuery);
 
         copyQueryBtn.onclick = () => {
             copyToClipboard(formattedQuery);
@@ -468,7 +470,7 @@ saveProfileBtn.addEventListener('click', async () => {
 // ==========================================
 // 6. LOGIKA RIWAYAT PENCARIAN (HISTORY)
 // ==========================================
-async function saveToHistory(word) {
+async function saveToHistory(word, result) {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     
     if (authError || !user) {
@@ -482,7 +484,8 @@ async function saveToHistory(word) {
             .insert([
                 { 
                     user_id: user.id, 
-                    keyword: word     
+                    keyword: word,
+                    result: result
                 }
             ]);
 
