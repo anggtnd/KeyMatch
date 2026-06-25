@@ -174,11 +174,21 @@
                 </div>
             </div>
 
-            <div id="pageHistory" class="hidden space-y-6">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Riwayat Pencarian</h2>
-                    <p class="text-slate-400 text-sm">Daftar kata kunci yang pernah Anda cari sebelumnya.</p>
-                </div>
+            <div class="flex justify-between items-center">
+    <div>
+        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">
+            Riwayat Pencarian
+        </h2>
+        <p class="text-slate-400 text-sm">
+            Daftar kata kunci yang pernah Anda cari sebelumnya.
+        </p>
+    </div>
+
+    <button id="clearHistoryBtn"
+        class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2 rounded-xl text-sm font-semibold border border-rose-100 transition">
+        🗑️ Hapus Semua
+    </button>
+</div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div id="historyListContainer" class="divide-y divide-slate-100 text-sm text-slate-600">
                         <p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>
