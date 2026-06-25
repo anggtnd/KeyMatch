@@ -518,7 +518,7 @@ async function renderHistory() {
     try {
         const { data: history, error } = await supabaseClient
             .from('history')
-            .select('keyword')
+            .select('keyword, result, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(10);
@@ -545,10 +545,19 @@ async function renderHistory() {
             `;
             
             itemRow.addEventListener('click', () => {
-                keywordInput.value = item.keyword;
-                menuSearch.click();
-                fetchSynonyms(); 
-            });
+    keywordInput.value = item.keyword;
+
+    menuSearch.click();
+
+    resultSection.classList.remove('hidden');
+
+    queryResult.value = item.result;
+
+    copyQueryBtn.onclick = () => {
+        copyToClipboard(item.result);
+        showToastNotification('Query berhasil disalin!');
+    };
+});
             
             historyListContainer.appendChild(itemRow);
         });
