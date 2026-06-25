@@ -468,44 +468,88 @@ saveProfileBtn.addEventListener('click', async () => {
 // ==========================================
 // 6. LOGIKA RIWAYAT PENCARIAN (HISTORY)
 // ==========================================
-function saveToHistory(word) {
-    let history = JSON.parse(localStorage.getItem('scopus_history')) || [];
-    history = history.filter(item => item.toLowerCase() !== word.toLowerCase());
-    history.unshift(word);
-    if (history.length > 10) history.pop();
-    localStorage.setItem('scopus_history', JSON.stringify(history));
-    renderHistory();
-}
-
-function renderHistory() {
-    const historyListContainer = document.getElementById('historyListContainer');
-    const history = JSON.parse(localStorage.getItem('scopus_history')) || [];
+async function saveToHistory(word) {
+    // 1. Ambil data user yang sedang login saat ini di Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (history.length === 0) {
-        historyListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>`;
+    if (authError || !user) {
+        console.error("Gagal menyimpan riwayat: User belum login atau sesi habis.");
         return;
     }
+
+    try {
+        // 2. Kirim data kata kunci langsung ke tabel 'history' di Supabase
+        const { error } = await supabase
+            .from('history') 
+            .insert([
+                { 
+                    user_id: user.id, // Menyimpan ID user agar tidak tertukar dengan orang lain
+                    keyword: word     // Menyimpan kata kunci yang dicari
+                }
+            ]);
+
+        if (error) throw error;
+
+        // 3. Setelah sukses menyimpan ke cloud, refresh tampilan riwayat di web
+        renderHistory();
+
+    } catch (error) {
+        console.error("Gagal mengirim riwayat ke Supabase:", error.message);
+    }
+}
+
+async function renderHistory() {
+    const historyListContainer = document.getElementById('historyListContainer');
     
-    historyListContainer.innerHTML = '';
-    
-    history.forEach(item => {
-        const itemRow = document.createElement('div');
-        itemRow.className = "flex justify-between items-center py-3 hover:bg-slate-50 px-2 rounded-xl transition cursor-pointer group";
+    // 1. Cek dulu user yang sedang login
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+        // 2. Tarik daftar riwayat dari Supabase KHUSUS milik user yang sedang login saja
+        // Kita urutkan berdasarkan data terbaru (created_at descending) dan batasi maksimal 10 data
+        const { data: history, error } = await supabase
+            .from('history')
+            .select('keyword')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        // 3. Jika riwayat di database kosong, tampilkan teks placeholder
+        if (!history || history.length === 0) {
+            historyListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>`;
+            return;
+        }
         
-        itemRow.innerHTML = `
-            <div class="flex items-center gap-3">
-                <span class="text-slate-400">🕒</span>
-                <span class="font-medium text-slate-700 group-hover:text-indigo-600 transition">${item}</span>
-            </div>
-            <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">Cari Lagi ↗</span>
-        `;
+        // 4. Bersihkan kontainer sebelum merender data terbaru
+        historyListContainer.innerHTML = '';
         
-        itemRow.addEventListener('click', () => {
-            keywordInput.value = item;
-            menuSearch.click();
-            fetchSynonyms();
+        // 5. Looping data yang ditarik dari Supabase ke elemen HTML
+        history.forEach(item => {
+            const itemRow = document.createElement('div');
+            itemRow.className = "flex justify-between items-center py-3 hover:bg-slate-50 px-2 rounded-xl transition cursor-pointer group";
+            
+            itemRow.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="text-slate-400">🕒</span>
+                    <span class="font-medium text-slate-700 group-hover:text-indigo-600 transition">${item.keyword}</span>
+                </div>
+                <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">Cari Lagi ↗</span>
+            `;
+            
+            itemRow.addEventListener('click', () => {
+                keywordInput.value = item.keyword;
+                menuSearch.click();
+                fetchSynonyms(); // Fungsi mencari padanan kata ilmiah kamu
+            });
+            
+            historyListContainer.appendChild(itemRow);
         });
-        
-        historyListContainer.appendChild(itemRow);
-    });
+
+    } catch (error) {
+        console.error("Gagal memuat data dari Supabase:", error.message);
+        historyListContainer.innerHTML = `<p class="text-rose-500 text-center py-4 text-xs">Gagal memuat riwayat pencarian.</p>`;
+    }
 }
