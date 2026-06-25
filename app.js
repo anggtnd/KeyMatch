@@ -2,7 +2,7 @@
 // 1. CONFIGURATION SUPABASE
 // ==========================================
 const SUPABASE_URL = "https://elzncubwogaabejekevz.supabase.co"; 
-const SUPABASE_ANON_KEY = "sb_publishable_RQCB2Eo5qwbkMqu5c2OeVA_rbNyNilQ";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVsem5jdWJ3b2dhYWJlamVrZXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MTY2NDUsImV4cCI6MjA5NzM5MjY0NX0.P861FHbaZ0y3hMv-C3qPi8o6JqdZbndKX8D5aro0SSM";
 
 // Inisialisasi koneksi ke Supabase
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
