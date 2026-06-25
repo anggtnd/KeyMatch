@@ -468,30 +468,25 @@ saveProfileBtn.addEventListener('click', async () => {
 // ==========================================
 // 6. LOGIKA RIWAYAT PENCARIAN (HISTORY)
 // ==========================================
-// Ganti fungsi saveToHistory lama kamu dengan ini
 async function saveToHistory(word) {
-    // 1. Ambil data user yang sedang login saat ini di Supabase
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     
     if (authError || !user) {
-        console.error("Gagal menyimpan riwayat: User belum login atau sesi habis.");
+        console.error("Gagal menyimpan riwayat: User belum login.");
         return;
     }
 
     try {
-        // 2. Kirim data kata kunci langsung ke tabel 'history' di Supabase
-        const { error } = await supabase
-            .from('history') // Sesuaikan dengan nama tabel di Supabase-mu
+        const { error } = await supabaseClient
+            .from('history') 
             .insert([
                 { 
-                    user_id: user.id, // Menyimpan ID user agar tidak tertukar dengan orang lain
-                    keyword: word     // Menyimpan kata kunci yang dicari
+                    user_id: user.id, 
+                    keyword: word     
                 }
             ]);
 
         if (error) throw error;
-
-        // 3. Setelah sukses menyimpan ke cloud, refresh tampilan riwayat di web
         renderHistory();
 
     } catch (error) {
@@ -499,18 +494,15 @@ async function saveToHistory(word) {
     }
 }
 
-// fungsi renderHistory 
 async function renderHistory() {
     const historyListContainer = document.getElementById('historyListContainer');
     
-    // 1. Cek user yang sedang login
-    const { data: { user } } = await supabase.auth.getUser();
+    // Memakai supabaseClient 
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
 
     try {
-        // 2. Tarik daftar riwayat dari Supabase KHUSUS milik user yang sedang login saja
-        // Kita urutkan berdasarkan data terbaru (created_at descending) dan batasi maksimal 10 data
-        const { data: history, error } = await supabase
+        const { data: history, error } = await supabaseClient
             .from('history')
             .select('keyword')
             .eq('user_id', user.id)
@@ -519,16 +511,13 @@ async function renderHistory() {
 
         if (error) throw error;
 
-        // 3. Jika riwayat di database kosong, tampilkan teks placeholder
         if (!history || history.length === 0) {
             historyListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>`;
             return;
         }
         
-        // 4. Bersihkan kontainer sebelum merender data terbaru
         historyListContainer.innerHTML = '';
         
-        // 5. Looping data yang ditarik dari Supabase ke elemen HTML
         history.forEach(item => {
             const itemRow = document.createElement('div');
             itemRow.className = "flex justify-between items-center py-3 hover:bg-slate-50 px-2 rounded-xl transition cursor-pointer group";
@@ -544,7 +533,7 @@ async function renderHistory() {
             itemRow.addEventListener('click', () => {
                 keywordInput.value = item.keyword;
                 menuSearch.click();
-                fetchSynonyms(); // Fungsi mencari padanan kata ilmiah kamu
+                fetchSynonyms(); 
             });
             
             historyListContainer.appendChild(itemRow);
