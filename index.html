@@ -5,25 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scopus Keyword Helper</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind configuration for Dark Mode
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased select-none">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 font-sans min-h-screen antialiased select-none transition-colors duration-200">
 
+    <!-- AUTH SECTION -->
     <div id="authSection" class="container mx-auto max-w-md px-4 py-20">
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
-            <h1 class="text-3xl font-extrabold text-indigo-700 mb-2 tracking-tight">KeyMatch</h1>
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+            <h1 class="text-3xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-2 tracking-tight">KeyMatch</h1>
             <p class="text-slate-400 text-xs mb-6">Silakan masuk atau daftar akun untuk menggunakan KeyMatch</p>
             
             <div class="space-y-4 text-left">
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                    <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
                     <input type="email" id="authEmail" placeholder="nama@gmail.com" 
-                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all duration-150">
+                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
+                    <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Password</label>
                     <input type="password" id="authPassword" placeholder="••••••••" 
-                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all duration-150">
+                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
                     <p class="text-[11px] text-slate-400 mt-1.5 italic leading-tight">
                         *Keterangan sandi: Minimal 6 karakter (boleh kombinasi huruf, angka, atau simbol).
                     </p>
@@ -32,139 +37,140 @@
                 <button id="loginBtn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-all duration-200 active:scale-[0.99] shadow-sm">
                     Masuk
                 </button>
-                <button id="registerBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
+                <button id="registerBtn" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 text-slate-700 font-medium py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
                     Belum punya akun? Daftar Baru
                 </button>
             </div>
         </div>
     </div>
 
-    <main id="mainAppSection" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-50 relative">
+    <!-- MAIN APP SECTION -->
+    <main id="mainAppSection" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-900 relative">
         
-        <header class="md:hidden bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+        <!-- Mobile Header -->
+        <header class="md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
             <div class="flex items-center gap-2">
-                <span class="text-lg font-extrabold text-indigo-700 tracking-tight">KeyMatch</span>
+                <span class="text-lg font-extrabold text-indigo-700 dark:text-indigo-400 tracking-tight">KeyMatch</span>
             </div>
-            <button id="toggleSidebarBtn" class="p-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-all duration-150 focus:outline-none">
+            <button id="toggleSidebarBtn" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-all duration-150 focus:outline-none">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
         </header>
 
+        <!-- Desktop Sidebar Toggle Button -->
         <div class="hidden md:block fixed top-6 left-6 z-30">
-            <button id="toggleSidebarLaptopBtn" onclick="toggleSidebar()" class="p-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all duration-150 shadow-sm focus:outline-none active:scale-95">
+            <button id="toggleSidebarLaptopBtn" class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-all duration-150 shadow-sm focus:outline-none active:scale-95">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
         </div>
 
-        <aside id="sidebarAside" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 p-6 flex flex-col justify-between transform -translate-x-full md:sticky md:top-0 md:h-screen md:translate-x-0 transition-all duration-300 ease-in-out">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebarAside" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-6 flex flex-col justify-between transform -translate-x-full md:sticky md:top-0 md:h-screen md:translate-x-0 transition-all duration-300 ease-in-out">
             <div class="space-y-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-xl font-extrabold text-indigo-700 tracking-tight">Menu</h1>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Halo, <span id="userDisplayEmail" class="font-medium text-slate-600">user@mail.com</span></p>
+                        <h1 class="text-xl font-extrabold text-indigo-700 dark:text-indigo-400 tracking-tight">Menu</h1>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Halo, <span id="userDisplayEmail" class="font-medium text-slate-600 dark:text-slate-300">user@mail.com</span></p>
                     </div>
-                    <button id="closeSidebarBtn" class="p-1.5 text-slate-400 hover:bg-slate-50 rounded-lg transition-all duration-150 focus:outline-none">
+                    <button id="closeSidebarBtn" class="p-1.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-150 focus:outline-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
+                <!-- Dark Mode Quick Toggle inside Sidebar -->
+                <button id="darkModeToggle" class="w-full flex items-center justify-between px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                    <span>🌙 Dark Mode</span>
+                    <span id="darkModeStatus" class="text-indigo-600 dark:text-indigo-400">Nonaktif</span>
+                </button>
+
                 <nav class="space-y-1">
-                    <button id="menuSearch" class="w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 font-semibold rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
+                    <button id="menuSearch" class="w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
                         🔎 <span>Pencarian Utama</span>
                     </button>
-                    <button id="menuHistory" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-50 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
+                    <button id="menuFavorites" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
+                        ⭐ <span>Kata Kunci Favorit</span>
+                    </button>
+                    <button id="menuHistory" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
                         📜 <span>Riwayat Pencarian</span>
                     </button>
-                    <button id="menuProfile" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-50 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
+                    <button id="menuProfile" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
                         👤 <span>Profil Saya</span>
                     </button>
                 </nav>
             </div>
 
-            <div class="text-[10px] text-slate-300 text-center md:block hidden tracking-wide">v1.0.0 © 2026 KeyMatch</div>
+            <div class="text-[10px] text-slate-300 dark:text-slate-600 text-center md:block hidden tracking-wide">v1.1.0 © 2026 KeyMatch</div>
         </aside>
 
+        <!-- Main Content Area -->
         <section class="flex-grow p-6 md:p-12 max-w-4xl mx-auto w-full space-y-8 relative">
             
             <div class="hidden md:flex justify-end items-center w-full -mb-4 select-none">
                 <div class="text-right">
-                    <h1 class="text-xl font-extrabold tracking-tight text-slate-800 flex items-center justify-end gap-1.5">
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-slate-200 flex items-center justify-end gap-1.5">
                         <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">KeyMatch</span>
                         <span class="text-base">✨</span>
                     </h1>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block -mt-0.5">
-                        Scopus Helper
-                    </p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block -mt-0.5">Scopus Helper</p>
                 </div>
             </div>
                 
+            <!-- PAGE SEARCH -->
             <div id="pageSearch" class="space-y-6">
                 <div class="mb-4">
-                    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Scopus Keywords Helper</h2>
+                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Scopus Keywords Helper</h2>
                     <p class="text-slate-400 text-sm">Cari padanan kata ilmiah global secara otomatis.</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="text" id="keywordInput" placeholder="Masukkan kata kunci (Contoh: government)..." 
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base transition-all duration-150 select-text">
-                        <button id="searchBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 whitespace-nowrap active:scale-[0.97] shadow-sm shadow-indigo-100">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div class="relative flex items-center w-full gap-2 sm:flex-row flex-col">
+                        <div class="relative flex-grow w-full flex items-center">
+                            <input type="text" id="keywordInput" placeholder="Masukkan kata kunci (Contoh: government)..." 
+                                   class="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text">
+                            <button id="clearBtn" type="button" class="absolute right-4 text-slate-300 hover:text-slate-500 transition p-1.5 focus:outline-none hidden active:scale-75 z-10">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <button id="searchBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 whitespace-nowrap active:scale-[0.97] shadow-sm shadow-indigo-100 sm:w-auto w-full">
                             Cari Kata
                         </button>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-3 flex items-center gap-1.5 px-1 italic">
-                        <span>💡</span> Tips: Gunakan istilah dalam bahasa Inggris untuk mendapatkan cakupan database Scopus yang lebih optimal.
-                    </p>
                 </div>
 
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto opacity-80">
-                    <div class="p-4 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-2xl flex gap-3 items-start">
-                        <span class="text-xl">💡</span>
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">Tips Input</h4>
-                            <p class="text-xs text-slate-500 mt-1">Gunakan kata tunggal atau frasa pendek (misal: <i>e-government</i>) untuk hasil maksimal.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-2xl flex gap-3 items-start">
-                        <span class="text-xl">🧬</span>
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">Standar Akademis</h4>
-                            <p class="text-xs text-slate-500 mt-1">Padanan kata otomatis disaring agar lolos dari daftar kata umum non-ilmiah Scopus.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-2xl flex gap-3 items-start">
-                        <span class="text-xl">⚡</span>
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">One-Click Copy</h4>
-                            <p class="text-xs text-slate-500 mt-1">Klik pada badge hasil pencarian untuk menyalin kata tunggal ke clipboard instan.</p>
-                        </div>
-                    </div>
-                </div>
-
+                <!-- Results -->
                 <div id="resultSection" class="hidden space-y-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Klik kata di bawah untuk menyalin:</h2>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Klik kata di bawah untuk menyalin:</h2>
+                            <!-- Save to Favorite Action Button -->
+                            <button id="saveToFavoriteBtn" class="text-xs bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 hover:bg-amber-100 transition">
+                                ⭐ <span>Simpan ke Favorit</span>
+                            </button>
+                        </div>
                         <div id="keywordsContainer" class="flex flex-wrap gap-2"></div>
                     </div>
 
-                    <div class="bg-indigo-50/70 p-6 rounded-2xl border border-indigo-100/60">
+                    <div class="bg-indigo-50/70 dark:bg-indigo-950/20 p-6 rounded-2xl border border-indigo-100/60 dark:border-indigo-900/40">
                         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
-                            <h3 class="text-sm font-bold text-indigo-900 tracking-tight">Keywords Otomatis (OR Syntax)</h3>
+                            <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 tracking-tight">Keywords Otomatis (OR Syntax)</h3>
                             <button id="copyQueryBtn" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-all duration-200 active:scale-95 shadow-sm self-start sm:self-auto">
                                 Copy Semua Query
                             </button>
                         </div>
                         <textarea id="queryResult" readonly rows="3" 
-                                  class="w-full p-3 bg-white rounded-xl border border-indigo-100 text-sm font-mono text-indigo-800 resize-none focus:outline-none select-all leading-relaxed shadow-inner"></textarea>
+                                  class="w-full p-3 bg-white dark:bg-slate-700 rounded-xl border border-indigo-100 dark:border-slate-600 text-sm font-mono text-indigo-800 dark:text-indigo-300 resize-none focus:outline-none select-all leading-relaxed shadow-inner"></textarea>
                     </div>
                 </div>
 
+                <!-- Loading State -->
                 <div id="loading" class="hidden text-center py-12 text-slate-400 text-sm animate-pulse flex flex-col items-center justify-center gap-2">
                     <svg class="animate-spin h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -174,72 +180,88 @@
                 </div>
             </div>
 
-            <div class="flex justify-between items-center">
-    <div>
-        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">
-            Riwayat Pencarian
-        </h2>
-        <p class="text-slate-400 text-sm">
-            Daftar kata kunci yang pernah Anda cari sebelumnya.
-        </p>
-    </div>
+            <!-- PAGE FAVORITES -->
+            <div id="pageFavorites" class="hidden space-y-6">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Kata Kunci Favorit</h2>
+                    <p class="text-slate-400 text-sm">Akses cepat kata kunci pilihan utama proyek riset Anda.</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div id="favoritesListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 text-sm text-slate-600 dark:text-slate-300">
+                        <p class="text-slate-400 italic text-center py-4">Belum ada kata kunci favorit yang disimpan.</p>
+                    </div>
+                </div>
+            </div>
 
-    <button id="clearHistoryBtn"
-        class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2 rounded-xl text-sm font-semibold border border-rose-100 transition">
-        🗑️ Hapus Semua
-    </button>
-</div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div id="historyListContainer" class="divide-y divide-slate-100 text-sm text-slate-600">
+            <!-- PAGE HISTORY -->
+            <div id="pageHistory" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Riwayat Pencarian</h2>
+                        <p class="text-slate-400 text-sm">Daftar kata kunci yang pernah Anda cari sebelumnya.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <!-- Export Button Feature -->
+                        <button id="exportHistoryBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1">
+                            📄 Export CSV
+                        </button>
+                        <button id="clearHistoryBtn" class="bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:text-rose-400 text-rose-600 px-4 py-2 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900 transition">
+                            🗑️ Hapus Semua
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div id="historyListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 text-sm text-slate-600 dark:text-slate-300">
                         <p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>
                     </div>
                 </div>
             </div>
 
+            <!-- PAGE PROFILE -->
             <div id="pageProfile" class="hidden space-y-6">
                 <div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Profil Pengguna</h2>
+                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Profil Pengguna</h2>
                     <p class="text-slate-400 text-sm">Kelola informasi data diri, avatar lucu, dan status keamanan akun Anda.</p>
                 </div>
                 
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-100 w-full overflow-hidden">
-                    <div class="h-28 bg-gradient-to-r from-indigo-200 to-purple-200"></div>
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-hidden">
+                    <div class="h-28 bg-gradient-to-r from-indigo-200 to-purple-200 dark:from-indigo-900 dark:to-purple-900"></div>
                     
                     <div class="p-6 relative -mt-14 space-y-6">
                         <div class="flex items-end gap-5">
                             <div class="relative group">
-                                <div id="profileAvatar" class="w-24 h-24 rounded-2xl bg-white text-indigo-700 flex items-center justify-center text-4xl font-bold border-4 border-white shadow-md select-none transition-all duration-200">
+                                <div id="profileAvatar" class="w-24 h-24 rounded-2xl bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-4xl font-bold border-4 border-white dark:border-slate-800 shadow-md select-none transition-all duration-200">
                                     A
                                 </div>
-                                <button id="changeAvatarBtn" disabled class="absolute -bottom-1 -right-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80 p-1.5 rounded-xl shadow-sm transition opacity-0 scale-75 pointer-events-none">
+                                <button id="changeAvatarBtn" disabled class="absolute -bottom-1 -right-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 p-1.5 rounded-xl shadow-sm transition opacity-0 scale-75 pointer-events-none">
                                     <span class="text-sm">✨</span>
                                 </button>
                             </div>
                             <div class="mb-2">
-                                <h3 id="profileCardName" class="text-xl font-bold text-slate-800 leading-tight">Nama Pengguna</h3>
-                                <p class="text-xs font-medium text-indigo-500/80 mt-1 bg-indigo-50/50 px-2.5 py-0.5 rounded-lg inline-block">Riset Terintegrasi</p>
+                                <h3 id="profileCardName" class="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">Nama Pengguna</h3>
+                                <p class="text-xs font-medium text-indigo-500/80 mt-1 bg-indigo-50/50 dark:bg-indigo-950/40 px-2.5 py-0.5 rounded-lg inline-block">Riset Terintegrasi</p>
                             </div>
                         </div>
 
-                        <hr class="border-slate-100">
+                        <hr class="border-slate-100 dark:border-slate-700">
 
                         <div class="space-y-4">
                             <div>
                                 <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Terdaftar</label>
-                                <p id="profileEmailDisplay" class="text-sm font-medium text-slate-500 mt-1 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100 select-none">
+                                <p id="profileEmailDisplay" class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 bg-slate-50 dark:bg-slate-700 px-4 py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 select-none">
                                     user@mail.com
                                 </p>
                             </div>
 
                             <div>
-                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</label>
+                                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama Lengkap</label>
                                 <input type="text" id="profileNameInput" placeholder="Belum mengatur nama..." disabled
-                                       class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150 select-text">
+                                       class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150 select-text">
                             </div>
                         </div>
 
                         <div class="pt-2">
-                            <button id="editProfileBtn" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-2.5 rounded-xl transition border border-indigo-100 text-sm active:scale-[0.99]">
+                            <button id="editProfileBtn" class="w-full bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 text-indigo-700 font-semibold py-2.5 rounded-xl transition border border-indigo-100 dark:border-indigo-900 text-sm active:scale-[0.99]">
                                 📝 Edit Profil Saya
                             </button>
                             
@@ -247,13 +269,13 @@
                                 <button id="saveProfileBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm shadow-sm active:scale-[0.99]">
                                     ✨ Simpan
                                 </button>
-                                <button id="cancelProfileBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
+                                <button id="cancelProfileBtn" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
                                     Batal
                                 </button>
                             </div>
                         </div>
 
-                        <hr class="border-slate-100">
+                        <hr class="border-slate-100 dark:border-slate-700">
 
                         <button id="logoutBtn" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm transition-all duration-200 border border-rose-100/40 active:scale-[0.99]">
                             Keluar dari KeyMatch
@@ -262,19 +284,20 @@
                 </div>
             </div>
 
+            <!-- Footer -->
             <div class="text-center pt-12 pb-6 text-xs text-slate-400">
                 <p class="font-bold text-slate-500 text-sm mb-1">
-                    Application by <span class="text-indigo-600">Anggita Indraswari</span>
+                    Application by <span class="text-indigo-600 dark:text-indigo-400">Anggita Indraswari</span>
                 </p>
                 <p>&copy; 2026 KeyMatch. All Rights Reserved.</p>
-                <p class="text-[10px] text-slate-300 mt-1">Created with ❤️ in VS Code.</p>
             </div>
 
         </section> 
     </main>
 
+    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50 font-medium">
-        Kata berhasil disalin ke clipboard!
+        Berhasil!
     </div>
 
     <script src="app.js"></script>
