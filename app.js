@@ -4,12 +4,13 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 2. DOM ELEMENTS SELECTION
+// 2. AMBIL ELEMEN HTML
 const authSection = document.getElementById('authSection');
 const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
+const togglePasswordBtn = document.getElementById('togglePasswordVisibility');
 
 const mainAppSection = document.getElementById('mainAppSection');
 const userDisplayEmail = document.getElementById('userDisplayEmail');
@@ -39,12 +40,13 @@ const pageSearch = document.getElementById('pageSearch');
 const pageFavorites = document.getElementById('pageFavorites');
 const pageHistory = document.getElementById('pageHistory');
 const pageProfile = document.getElementById('pageProfile');
-const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-const exportHistoryBtn = document.getElementById('exportHistoryBtn');
-const favoritesListContainer = document.getElementById('favoritesListContainer');
 
-const darkModeToggle = document.getElementById('darkModeToggle');
-const darkModeStatus = document.getElementById('darkModeStatus');
+const favoritesListContainer = document.getElementById('favoritesListContainer');
+const historyListContainer = document.getElementById('historyListContainer');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+const clearFavoritesBtn = document.getElementById('clearFavoritesBtn');
+const exportHistoryBtn = document.getElementById('exportHistoryBtn');
+const exportFavoritesBtn = document.getElementById('exportFavoritesBtn');
 
 const profileEmailDisplay = document.getElementById('profileEmailDisplay');
 const profileNameInput = document.getElementById('profileNameInput');
@@ -53,25 +55,36 @@ const saveProfileBtn = document.getElementById('saveProfileBtn');
 const cancelProfileBtn = document.getElementById('cancelProfileBtn');
 const profileAvatar = document.getElementById('profileAvatar');
 const profileCardName = document.getElementById('profileCardName');
-const changeAvatarBtn = document.getElementById('changeAvatarBtn');
 const editActionGroup = document.getElementById('editActionGroup');
 
+const darkModeToggle = document.getElementById('darkModeToggle');
+const darkModeStatus = document.getElementById('darkModeStatus');
+
 let currentSavedName = '';
-const cuteAvatars = ['✨', '👩‍💻', '🚀', '🦊', '🧠', '💡', '🌟', '🎨', '🌸', '🐾'];
-let currentAvatarEmoji = '👩‍💻';
 
-const academicBannedWords = [
-    'book', 'books', 'frame', 'heads', 'head', 'rebellion', 'insurrection', 
-    'court', 'rebel', 'glasnost', 'landsat', 'artifact', 'toy', 'thing', 
-    'names', 'name', 'open market operations', 'cybermind', 'sapient', 'sophont'
-];
+// 3. LOGIKA AUTHENTICATION & INTERAKSI MATA PASSWORD
+if (togglePasswordBtn && authPassword) {
+    togglePasswordBtn.addEventListener('click', function () {
+        const type = authPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+        authPassword.setValue = authPassword.setAttribute('type', type);
+        
+        // Mengubah gambar mata terbuka / mata tersilang (Eye / Eye Off) secara dinamis
+        if (type === 'text') {
+            this.innerHTML = `
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+                </svg>`;
+        } else {
+            this.innerHTML = `
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>`;
+        }
+    });
+}
 
-// 3. APPLICATION LIFE-CYCLE & INITIALIZATION
 window.addEventListener('DOMContentLoaded', async () => {
-    initAppEvents();
-    initDarkMode();
-    handleResize();
-
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         showMainApp(session.user.email);
@@ -80,122 +93,43 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-window.addEventListener('resize', handleResize);
-
-function initAppEvents() {
-    // Auth Actions
-    registerBtn.addEventListener('click', handleRegister);
-    loginBtn.addEventListener('click', handleLogin);
-    logoutBtn.addEventListener('click', handleLogout);
-
-    // Sidebar & Navigation
-    if(toggleSidebarBtn) toggleSidebarBtn.addEventListener('click', toggleSidebar);
-    if(toggleSidebarLaptopBtn) toggleSidebarLaptopBtn.addEventListener('click', toggleSidebar);
-    if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
-
-    menuSearch.addEventListener('click', () => switchTab(menuSearch, pageSearch));
-    menuFavorites.addEventListener('click', () => {
-        switchTab(menuFavorites, pageFavorites);
-        renderFavorites();
-    });
-    menuHistory.addEventListener('click', () => {
-        switchTab(menuHistory, pageHistory);
-        renderHistory();
-    });
-    menuProfile.addEventListener('click', () => {
-        switchTab(menuProfile, pageProfile);
-        loadUserProfileData();
-    });
-
-    // Search Actions
-    searchBtn.addEventListener('click', fetchSynonyms);
-    keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') fetchSynonyms(); });
-    keywordInput.addEventListener('input', toggleClearButton);
-    clearBtn.addEventListener('click', clearSearchInput);
-    saveToFavoriteBtn.addEventListener('click', addCurrentToFavorites);
-
-    // Profile Actions
-    editProfileBtn.addEventListener('click', unlockProfileForm);
-    cancelProfileBtn.addEventListener('click', revertProfileForm);
-    changeAvatarBtn.addEventListener('click', rotateAvatarEmoji);
-    saveProfileBtn.addEventListener('click', saveUserProfile);
-
-    // Global History Actions
-    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearAllHistoryData);
-    if (exportHistoryBtn) exportHistoryBtn.addEventListener('click', exportHistoryToCSV);
-
-    // Dark Mode Toggle Trigger
-    darkModeToggle.addEventListener('click', toggleDarkMode);
-}
-
-// 4. DARK MODE LOGIC
-function initDarkMode() {
-    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-        darkModeStatus.textContent = "Aktif 🌙";
-    } else {
-        document.documentElement.classList.remove('dark');
-        darkModeStatus.textContent = "Nonaktif ☀️";
-    }
-}
-
-function toggleDarkMode() {
-    if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        darkModeStatus.textContent = "Nonaktif ☀️";
-        showToastNotification('Mode Terang Diaktifkan');
-    } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        darkModeStatus.textContent = "Aktif 🌙";
-        showToastNotification('Mode Gelap Diaktifkan');
-    }
-}
-
-// 5. AUTHENTICATION LOGIC
-async function handleRegister() {
+registerBtn.addEventListener('click', async () => {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
-
-    if (!email || !password) return alert('Email dan password harus diisi!');
-    if (password.length < 6) return alert('Password minimal harus 6 karakter!');
+    if (!email || !password) return alert('Email and password must be filled!');
+    if (password.length < 6) return alert('Password must be at least 6 characters!');
 
     const { error } = await supabaseClient.auth.signUp({ email, password });
     if (error) {
-        alert(error.message.includes("User already registered") ? 'Email sudah terdaftar!' : 'Gagal daftar: ' + error.message);
+        alert(error.message.includes("already registered") ? 'This email is already registered!' : 'Registration failed: ' + error.message);
     } else {
-        alert('Pendaftaran berhasil! Silakan masuk.');
+        alert('Registration successful! Please click Sign In.');
     }
-}
+});
 
-async function handleLogin() {
+loginBtn.addEventListener('click', async () => {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
-    if (!email || !password) return alert('Email dan password harus diisi!');
+    if (!email || !password) return alert('Email and password must be filled!');
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) alert('Gagal masuk: ' + error.message);
+    if (error) alert('Login failed: ' + error.message);
     else showMainApp(data.user.email);
-}
+});
 
-async function handleLogout() {
-    const { error } = await supabaseClient.auth.signOut();
-    if (!error) {
-        showAuthForm();
-        authEmail.value = '';
-        authPassword.value = '';
-        clearSearchInput();
-        resultSection.classList.add('hidden');
-    }
-}
+logoutBtn.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    showAuthForm();
+    authEmail.value = ''; authPassword.value = ''; keywordInput.value = '';
+    resultSection.classList.add('hidden');
+});
 
-async function showMainApp(email) {
+function showMainApp(email) {
     authSection.classList.add('hidden');
     mainAppSection.classList.remove('hidden');
-    
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    userDisplayEmail.textContent = (user?.user_metadata?.full_name) ? user.user_metadata.full_name : email;
+    supabaseClient.auth.getUser().then(({ data: { user } }) => {
+        userDisplayEmail.textContent = (user?.user_metadata?.full_name) ? user.user_metadata.full_name : email;
+    });
     handleResize();
 }
 
@@ -204,78 +138,109 @@ function showAuthForm() {
     mainAppSection.classList.add('hidden');
 }
 
-// 6. SEARCH LOGIC & SYNONYMS CORE
-async function fetchSynonyms() {
-    const word = keywordInput.value.trim();
+// 4. LOGIKA PENCARIAN CERDAS (GLOBAL & AKADEMIS)
+searchBtn.addEventListener('click', () => fetchSynonyms());
+keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') fetchSynonyms(); });
+
+if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+        keywordInput.value = ''; clearBtn.classList.add('hidden'); keywordInput.focus();
+    });
+}
+
+keywordInput.addEventListener('input', () => {
+    if (keywordInput.value.trim().length > 0) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+});
+
+const academicBannedWords = ['book', 'books', 'frame', 'toy', 'thing', 'guy', 'stuff', 'person', 'people', 'man', 'woman', 'names', 'name'];
+
+async function fetchSynonyms(forcedWord = null) {
+    const word = forcedWord ? forcedWord.trim() : keywordInput.value.trim();
+    const warningContainer = document.getElementById('searchWarningContainer');
+    const successContainer = document.getElementById('searchSuccessContainer');
+
     if (!word) {
-        showToastNotification('Kata kunci tidak boleh kosong!');
+        showToastNotification('Keyword cannot be empty!');
         keywordInput.focus();
         return;
     }
 
     loading.classList.remove('hidden');
     resultSection.classList.add('hidden');
+    warningContainer.classList.add('hidden');
+    successContainer.classList.remove('hidden');
     keywordsContainer.innerHTML = '';
 
     try {
-        const apiUrl = `https://api.datamuse.com/words?ml=${encodeURIComponent(word)}&topics=government,technology,science,administration&max=25`;
+        // LEPAS TOTAL BATASAN TOPIK: mendukung kedokteran, teknik, sains, dll.
+        const apiUrl = `https://api.datamuse.com/words?ml=${encodeURIComponent(word)}&max=35`;
         const response = await fetch(apiUrl);
         const data = await response.json();
         loading.classList.add('hidden');
 
-        if (data.length === 0) return alert('Maaf, tidak ditemukan padanan kata.');
-
+        // Filter Cerdas: Memastikan relasi makna kuat dan membuang kata percakapan umum
         const filteredData = data.filter(item => {
-            const lowerWord = item.word.toLowerCase();
-            return !academicBannedWords.some(banned => lowerWord.includes(banned));
+            const cleanWord = item.word.toLowerCase();
+            return item.score > 55000 && !academicBannedWords.includes(cleanWord) && cleanWord !== word.toLowerCase();
         });
 
-        const finalData = filteredData.slice(0, 12);
-        if (finalData.length === 0) return alert('Maaf, tidak ditemukan kata ilmiah standar akademis.');
+        if (filteredData.length === 0) {
+            resultSection.classList.remove('hidden');
+            successContainer.classList.add('hidden');
+            warningContainer.classList.remove('hidden');
+            return;
+        }
 
-        resultSection.classList.remove('hidden');
-        let scopusWords = [word];
+        const topWords = filteredData.slice(0, 12);
+        const finalSynonyms = topWords.map(item => item.word);
 
-        finalData.forEach(item => {
-            scopusWords.push(item.word);
-            const badge = document.createElement('button');
-            badge.className = "bg-slate-100 dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-indigo-900 hover:text-indigo-700 dark:hover:text-indigo-200 text-slate-700 dark:text-slate-200 font-medium px-3 py-2 rounded-xl text-sm transition-all duration-150 flex items-center border border-slate-200/60 dark:border-slate-600 active:scale-95";
-            badge.innerHTML = `${item.word} <span class="text-slate-300 ml-1.5 text-xs">📋</span>`;
-            badge.addEventListener('click', () => {
-                copyToClipboard(item.word);
-                showToastNotification('Kata berhasil disalin!');
-            });
-            keywordsContainer.appendChild(badge);
-        });
+        displayGeneratedKeywords(word, finalSynonyms);
 
-        const formattedQuery = `TITLE-ABS-KEY (${scopusWords.map(w => `"${w}"`).join(' OR ')})`;
-        queryResult.value = formattedQuery;
-
-        await saveToHistory(word, formattedQuery);
-
-        copyQueryBtn.onclick = () => {
-            copyToClipboard(formattedQuery);
-            showToastNotification('Seluruh query OR berhasil disalin!');
-        };
+        if (!forcedWord) {
+            await saveToHistory(word, queryResult.value);
+        }
 
     } catch (error) {
+        console.error("Error fetching data:", error);
         loading.classList.add('hidden');
-        alert('Terjadi kesalahan koneksi.');
     }
 }
 
-function clearSearchInput() {
-    keywordInput.value = '';
-    clearBtn.classList.add('hidden');
-    keywordInput.focus();
-}
+// Fungsi pembantu untuk memunculkan badge kata yang bisa diklik satu-satu
+function displayGeneratedKeywords(mainWord, synonymsArray) {
+    resultSection.classList.remove('hidden');
+    keywordsContainer.innerHTML = '';
+    
+    let scopusWords = [mainWord, ...synonymsArray];
 
-function toggleClearButton() {
-    clearBtn.classList.toggle('hidden', keywordInput.value.trim().length === 0);
+    synonymsArray.forEach(synonym => {
+        const badge = document.createElement('button');
+        badge.className = "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-indigo-500 hover:text-white font-medium px-3 py-2 rounded-xl text-sm transition-all duration-150 flex items-center border border-slate-200/40 dark:border-slate-600 active:scale-95";
+        badge.innerHTML = `${synonym} <span class="text-slate-400 ml-1.5 text-xs">📋</span>`;
+        
+        badge.addEventListener('click', () => {
+            copyToClipboard(synonym);
+            showToastNotification(`Copied: "${synonym}"`);
+        });
+        keywordsContainer.appendChild(badge);
+    });
+
+    const formattedQuery = `TITLE-ABS-KEY (${scopusWords.map(w => `"${w}"`).join(' OR ')})`;
+    queryResult.value = formattedQuery;
+
+    copyQueryBtn.onclick = () => {
+        copyToClipboard(formattedQuery);
+        showToastNotification('All query syntax copied successfully!');
+    };
+
+    saveToFavoriteBtn.onclick = async () => {
+        await saveToFavorites(mainWord, synonymsArray.join(', '));
+    };
 }
 
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).catch(err => console.error(err));
+    navigator.clipboard.writeText(text).catch(() => {});
 }
 
 function showToastNotification(message) {
@@ -284,263 +249,398 @@ function showToastNotification(message) {
     setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 2500);
 }
 
-// 7. FAVORITES FEATURE LOGIC
-async function addCurrentToFavorites() {
-    const word = keywordInput.value.trim();
-    const result = queryResult.value;
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user || !word || !result) return;
+// 5. NAVIGASI SIDEBAR & RESPONSIVITAS
+if(toggleSidebarBtn) toggleSidebarBtn.addEventListener('click', toggleSidebar);
+if(toggleSidebarLaptopBtn) toggleSidebarLaptopBtn.addEventListener('click', toggleSidebar);
+if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
 
-    // Check duplicate first
-    const { data: existing } = await supabaseClient.from('favorites').select('id').eq('user_id', user.id).eq('keyword', word);
-    if (existing && existing.length > 0) {
-        return showToastNotification('Kata kunci ini sudah ada di favorit!');
-    }
-
-    const { error } = await supabaseClient.from('favorites').insert([{ user_id: user.id, keyword: word, result: result }]);
-    if (!error) showToastNotification('⭐ Tersimpan ke Favorit!');
-    else alert(error.message);
-}
-
-async function renderFavorites() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-
-    try {
-        const { data: favs, error } = await supabaseClient.from('favorites').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        if (error) throw error;
-
-        if (!favs || favs.length === 0) {
-            favoritesListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">Belum ada kata kunci favorit.</p>`;
-            return;
-        }
-
-        favoritesListContainer.innerHTML = '';
-        favs.forEach(item => {
-            const row = document.createElement('div');
-            row.className = "flex justify-between items-center py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 rounded-xl transition cursor-pointer group";
-            row.innerHTML = `
-                <div class="flex justify-between items-center w-full">
-                    <div class="flex items-center gap-3 fav-click flex-grow">
-                        <span class="text-amber-400 text-base">⭐</span>
-                        <div class="font-semibold text-slate-700 dark:text-slate-200">${item.keyword}</div>
-                    </div>
-                    <button class="delete-fav text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition" data-id="${item.id}">🗑️</button>
-                </div>
-            `;
-
-            row.querySelector('.fav-click').addEventListener('click', () => {
-                keywordInput.value = item.keyword;
-                toggleClearButton();
-                switchTab(menuSearch, pageSearch);
-                resultSection.classList.remove('hidden');
-                queryResult.value = item.result;
-            });
-
-            row.querySelector('.delete-fav').addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (confirm('Hapus dari favorit?')) {
-                    await supabaseClient.from('favorites').delete().eq('id', item.id);
-                    renderFavorites();
-                }
-            });
-            favoritesListContainer.appendChild(row);
-        });
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-// 8. SIDEBAR & NAVIGATION RESPONSIVENESS
-function toggleSidebar() {
-    sidebarAside.classList.toggle('-translate-x-full');
-}
+function toggleSidebar() { sidebarAside.classList.toggle('-translate-x-full'); }
 
 function handleResize() {
     if (window.innerWidth >= 768) sidebarAside.classList.remove('-translate-x-full');
     else sidebarAside.classList.add('-translate-x-full');
 }
+window.addEventListener('resize', handleResize);
 
-function switchTab(activeMenuBtn, activePageEl) {
+function resetMenuStyles() {
     [menuSearch, menuFavorites, menuHistory, menuProfile].forEach(btn => {
-        btn.className = "w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150";
+        if(btn) btn.className = "w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150";
     });
-    [pageSearch, pageFavorites, pageHistory, pageProfile].forEach(page => page.classList.add('hidden'));
-
-    activeMenuBtn.className = "w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150";
-    activePageEl.classList.remove('hidden');
+    pageSearch.classList.add('hidden'); pageFavorites.classList.add('hidden'); pageHistory.classList.add('hidden'); pageProfile.classList.add('hidden');
     if (window.innerWidth < 768) sidebarAside.classList.add('-translate-x-full');
 }
 
-// 9. SEARCH HISTORY & EXPORT EXCEL/CSV LOGIC
+menuSearch.addEventListener('click', () => {
+    resetMenuStyles();
+    menuSearch.className = "w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150";
+    pageSearch.classList.remove('hidden');
+});
+
+menuFavorites.addEventListener('click', () => {
+    resetMenuStyles();
+    menuFavorites.className = "w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150";
+    pageFavorites.classList.remove('hidden');
+    renderFavorites();
+});
+
+menuHistory.addEventListener('click', () => {
+    resetMenuStyles();
+    menuHistory.className = "w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150";
+    pageHistory.classList.remove('hidden');
+    renderHistory();
+});
+
+menuProfile.addEventListener('click', () => {
+    resetMenuStyles();
+    menuProfile.className = "w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150";
+    pageProfile.classList.remove('hidden');
+    loadUserProfileData();
+});
+
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        darkModeStatus.textContent = document.documentElement.classList.contains('dark') ? 'Enabled' : 'Disabled';
+    });
+}
+
+// 6. MANAJEMEN PROFIL (SINKRONISASI UPDATE PASSWORD)
+const profilePasswordInput = document.getElementById('profilePasswordInput'); // pastikan id input password di HTML kamu adalah ini
+
+async function loadUserProfileData() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+        profileEmailDisplay.textContent = user.email;
+        let displayName = user.user_metadata?.full_name ? user.user_metadata.full_name : user.email.split('@')[0];
+
+        currentSavedName = displayName;
+        profileNameInput.value = displayName;
+        profileCardName.textContent = displayName;
+    }
+    // Kosongkan kembali placeholder input password setiap kali halaman profil dimuat
+    if (profilePasswordInput) profilePasswordInput.value = '';
+    lockProfileForm();
+}
+
+editProfileBtn.addEventListener('click', () => {
+    // Mengaktifkan input Nama
+    profileNameInput.disabled = false;
+    profileNameInput.classList.remove('bg-slate-50', 'text-slate-400');
+    profileNameInput.classList.add('bg-white', 'text-slate-700');
+
+    // Mengaktifkan input Password Baru
+    if (profilePasswordInput) {
+        profilePasswordInput.disabled = false;
+        profilePasswordInput.classList.remove('bg-slate-50', 'text-slate-400');
+        profilePasswordInput.classList.add('bg-white', 'text-slate-700');
+    }
+
+    editProfileBtn.classList.add('hidden');
+    editActionGroup.classList.remove('hidden');
+});
+
+cancelProfileBtn.addEventListener('click', () => {
+    profileNameInput.value = currentSavedName;
+    if (profilePasswordInput) profilePasswordInput.value = '';
+    lockProfileForm();
+});
+
+function lockProfileForm() {
+    profileNameInput.disabled = true;
+    profileNameInput.classList.remove('bg-white', 'text-slate-700');
+    profileNameInput.classList.add('bg-slate-50', 'text-slate-400');
+
+    if (profilePasswordInput) {
+        profilePasswordInput.disabled = true;
+        profilePasswordInput.classList.remove('bg-white', 'text-slate-700');
+        profilePasswordInput.classList.add('bg-slate-50', 'text-slate-400');
+    }
+
+    editProfileBtn.classList.remove('hidden');
+    editActionGroup.classList.add('hidden');
+}
+
+saveProfileBtn.addEventListener('click', async () => {
+    const fullNameValue = profileNameInput.value.trim();
+    const newPasswordValue = profilePasswordInput ? profilePasswordInput.value.trim() : '';
+    
+    if (!fullNameValue) return alert('Name field cannot be empty!');
+
+    saveProfileBtn.disabled = true;
+    let updatePayload = { data: { full_name: fullNameValue } };
+
+    // Jika user mengetikkan password baru, sertakan ke dalam proses update Supabase
+    if (newPasswordValue.length > 0) {
+        if (newPasswordValue.length < 6) {
+            saveProfileBtn.disabled = false;
+            return alert('New password must be at least 6 characters long!');
+        }
+        updatePayload.password = newPasswordValue;
+    }
+
+    const { error } = await supabaseClient.auth.updateUser(updatePayload);
+    saveProfileBtn.disabled = false;
+
+    if (error) {
+        alert('Failed to update profile: ' + error.message);
+    } else {
+        alert('Profile and password updated successfully!');
+        currentSavedName = fullNameValue; 
+        userDisplayEmail.textContent = fullNameValue; 
+        profileCardName.textContent = fullNameValue;
+        
+        if (profilePasswordInput) profilePasswordInput.value = '';
+        lockProfileForm();
+    }
+});
+
+// 7. MANAJEMEN DATABASE: HISTORY & FAVORITES (SUPABASE)
+
+// Fungsi Menyimpan Riwayat Pencarian
 async function saveToHistory(word, result) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
     await supabaseClient.from('history').insert([{ user_id: user.id, keyword: word, result: result }]);
 }
 
-async function renderHistory() {
-    const historyListContainer = document.getElementById('historyListContainer');
+// FIX TOTAL: Fungsi Menyimpan ke Tabel Favorites Sesuai Kolom Supabase Kamu ('result')
+async function saveToFavorites(word, synonymsString) {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
+    if (!user) return showToastNotification('Please login first!');
+    
+    // Cek duplikasi di database agar tidak tersimpan ganda
+    const { data } = await supabaseClient.from('favorites').select('id').eq('user_id', user.id).eq('keyword', word);
+    if (data && data.length > 0) {
+        showToastNotification('Already saved in Favorites! ⭐');
+        return;
+    }
 
-    try {
-        const { data: history, error } = await supabaseClient.from('history').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        if (error) throw error;
+    // Ambil nilai teks lengkap sintaks query dari kotak textarea hasil pencarian saat ini
+    const querySyntaxValue = queryResult.value;
 
-        if (!history || history.length === 0) {
-            historyListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>`;
-            return;
+    // Menyesuaikan struktur kolom asli Supabase kamu: user_id, keyword, result
+    const { error } = await supabaseClient.from('favorites').insert([
+        { 
+            user_id: user.id, 
+            keyword: word, 
+            result: querySyntaxValue 
         }
-        
-        historyListContainer.innerHTML = '';
-        history.forEach(item => {
-            const itemRow = document.createElement('div');
-            itemRow.className = "flex justify-between items-center py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 rounded-xl transition cursor-pointer group";
-            itemRow.innerHTML = `
-                <div class="flex justify-between items-start w-full">
-                    <div class="flex items-start gap-3 history-clickable-area flex-grow">
-                        <span class="text-slate-400">🕒</span>
-                        <div>
-                            <div class="font-medium text-slate-700 dark:text-slate-200">${item.keyword}</div>
-                            <div class="text-xs text-slate-400 mt-1">${new Date(item.created_at).toLocaleString('id-ID')}</div>
-                        </div>
-                    </div>
-                    <button class="delete-single-history text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition" data-id="${item.id}">🗑️</button>
-                </div>
-            `;
-            
-            itemRow.querySelector('.history-clickable-area').addEventListener('click', () => {
-                keywordInput.value = item.keyword;
-                toggleClearButton();
-                switchTab(menuSearch, pageSearch);
-                resultSection.classList.remove('hidden');
-                queryResult.value = item.result;
-            });
+    ]);
 
-            itemRow.querySelector('.delete-single-history').addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (confirm('Hapus riwayat ini?')) {
-                    await supabaseClient.from('history').delete().eq('id', item.id);
-                    renderHistory();
-                }
-            });
-            historyListContainer.appendChild(itemRow);
-        });
-
-        const exportBtn = document.getElementById('exportHistoryBtn');
-        if (exportBtn) {
-            // Hapus listener lama jika ada agar tidak double download
-            exportBtn.onclick = null; 
-            exportBtn.onclick = async () => {
-                // Gunakan langsung data 'history' yang sudah kita ambil di atas
-                if (!history || history.length === 0) return alert('Tidak ada data riwayat untuk diekspor!');
-
-                let csvContent = "\uFEFFKeyword,Scopus Query,Tanggal Pencarian\n"; 
-                history.forEach(row => {
-                    const cleanKeyword = `"${row.keyword.replace(/"/g, '""')}"`;
-                    const cleanResult = `"${row.result.replace(/"/g, '""')}"`;
-                    const cleanDate = `"${new Date(row.created_at).toLocaleString('id-ID')}"`;
-                    csvContent += `${cleanKeyword},${cleanResult},${cleanDate}\n`;
-                });
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `KeyMatch_History_Export.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showToastNotification("📄 File CSV Berhasil Diunduh!");
-            };
+    if (error) {
+        console.error("Supabase Save Error Details:", error);
+        showToastNotification(`Failed: ${error.message}`);
+    } else {
+        showToastNotification('Added to Favorites! ⭐');
+        // Refresh otomatis jika user sedang membuka tab halaman favorit
+        if (!pageFavorites.classList.contains('hidden')) {
+            renderFavorites();
         }
-
-    } catch (err) { console.error(err); }
+    }
 }
 
-async function exportHistoryToCSV() {
+// Fungsi Memuat Riwayat Pencarian (Menampilkan Tanggal + Jam & Menit)
+async function renderHistory() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
 
-    const { data: history } = await supabaseClient.from('history').select('keyword, result, created_at').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (!history || history.length === 0) return alert('Tidak ada data riwayat untuk diekspor!');
+    const { data: history } = await supabaseClient.from('history').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
+    if (!history || history.length === 0) {
+        historyListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">No search history available.</p>`;
+        return;
+    }
 
-    // Saring string agar aman dibaca CSV Excel (Escaping double quotes)
-    let csvContent = "\uFEFFKeyword,Scopus Query,Tanggal Pencarian\n"; 
-    history.forEach(row => {
-        const safeKeyword = row.keyword || '';
-        const safeResult = row.result || '';
-        const cleanKeyword = `"${safeKeyword.replace(/"/g, '""')}"`;
-        const cleanResult = `"${safeResult.replace(/"/g, '""')}"`;
-        const cleanDate = `"${new Date(row.created_at).toLocaleString('id-ID')}"`;
-        csvContent += `${cleanKeyword},${cleanResult},${cleanDate}\n`;
+    historyListContainer.innerHTML = '';
+    history.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 rounded-xl transition cursor-pointer group";
+        
+        // FORMAT WAKTU: Menambahkan komponen jam dan menit (HH:MM)
+        const searchDate = new Date(item.created_at);
+        const dateStr = searchDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        const timeStr = searchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const fullDateTime = `${dateStr} • ${timeStr}`; 
+        
+        row.innerHTML = `
+            <div class="flex justify-between items-center w-full">
+                <div>
+                    <div class="font-medium text-slate-700 dark:text-slate-200 group-hover:text-indigo-600">${item.keyword}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">🕒 ${fullDateTime}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">Restore ↗</span>
+                    <button class="del-btn text-rose-400 hover:text-rose-600 px-2 focus:outline-none opacity-0 group-hover:opacity-100 transition">🗑️</button>
+                </div>
+            </div>`;
+        
+        row.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del-btn')) return;
+            keywordInput.value = item.keyword;
+            menuSearch.click();
+            fetchSynonyms(item.keyword);
+        });
+
+        row.querySelector('.del-btn').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this history record?')) {
+                await supabaseClient.from('history').delete().eq('id', item.id);
+                renderHistory();
+            }
+        });
+        historyListContainer.appendChild(row);
     });
+}
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+// Fungsi Memuat Daftar Favorit dari Supabase
+async function renderFavorites() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: favorites } = await supabaseClient.from('favorites').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (!favorites || favorites.length === 0) {
+        favoritesListContainer.innerHTML = `<p class="text-slate-400 italic text-center py-4">No favorite keywords saved yet.</p>`;
+        return;
+    }
+
+    favoritesListContainer.innerHTML = '';
+    favorites.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 rounded-xl transition cursor-pointer group";
+        
+        // Memotong tampilan teks query agar tidak merusak tata letak baris tabel
+        const cleanDisplayResult = item.result ? item.result.replace('TITLE-ABS-KEY (', '').replace(')', '') : '';
+
+        row.innerHTML = `
+            <div class="flex justify-between items-center w-full">
+                <div>
+                    <div class="font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600">⭐ ${item.keyword}</div>
+                    <div class="text-xs text-slate-400 mt-1 truncate max-w-md">Query: ${cleanDisplayResult}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition">Open ↗</span>
+                    <button class="del-fav text-rose-400 hover:text-rose-600 px-2 focus:outline-none opacity-0 group-hover:opacity-100 transition">🗑️</button>
+                </div>
+            </div>`;
+
+        row.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del-fav')) return;
+            keywordInput.value = item.keyword;
+            menuSearch.click();
+            
+            // Ekstrak kata-kata di dalam tanda kutip untuk mengembalikan badge tombol satuan
+            const matches = item.result ? item.result.match(/"([^"]+)"/g) : [];
+            const cleanWords = matches ? matches.map(w => w.replace(/"/g, '')) : [];
+            
+            // Buang elemen kata kunci utama dari deretan kata sinonim badge
+            const finalSynonymsArr = cleanWords.filter(w => w.toLowerCase() !== item.keyword.toLowerCase());
+            
+            displayGeneratedKeywords(item.keyword, finalSynonymsArr);
+        });
+
+        row.querySelector('.del-fav').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (confirm('Remove this word from favorites?')) {
+                await supabaseClient.from('favorites').delete().eq('id', item.id);
+                renderFavorites();
+            }
+        });
+        favoritesListContainer.appendChild(row);
+    });
+}
+
+// Tombol Hapus Massal Riwayat
+if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear your entire search history?')) return;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        await supabaseClient.from('history').delete().eq('user_id', user.id);
+        showToastNotification('History cleared!');
+        renderHistory();
+    });
+}
+
+// Tombol Hapus Massal Favorit
+if (clearFavoritesBtn) {
+    clearFavoritesBtn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear all your favorite keywords?')) return;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        await supabaseClient.from('favorites').delete().eq('user_id', user.id);
+        showToastNotification('All favorites cleared!');
+        renderFavorites();
+    });
+}
+
+// Fungsi Dasar Download CSV
+function downloadCSV(filename, dataHeaders, rowsArray) {
+    let csvContent = "data:text/csv;charset=utf-8," + dataHeaders.join(",") + "\n" + rowsArray.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `KeyMatch_History_Export.csv`);
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToastNotification("📄 File CSV Berhasil Diunduh!");
 }
 
-async function clearAllHistoryData() {
-    if (!confirm('Hapus semua riwayat?')) return;
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    await supabaseClient.from('history').delete().eq('user_id', user.id);
-    renderHistory();
+// Export CSV Riwayat
+if (exportHistoryBtn) {
+    exportHistoryBtn.addEventListener('click', async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data } = await supabaseClient.from('history').select('keyword, created_at').eq('user_id', user.id);
+        if (!data || data.length === 0) return alert('No history data to export!');
+        const rows = data.map(item => [`"${item.keyword}"`, `"${new Date(item.created_at).toLocaleString()}"`]);
+        downloadCSV("keymatch_history.csv", ["Keyword", "Search Date & Time"], rows);
+    });
 }
 
-// 10. PROFILE LOGIC
-async function loadUserProfileData() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-    profileEmailDisplay.textContent = user.email;
-    currentAvatarEmoji = user.user_metadata?.avatar_emoji || '👩‍💻';
-    profileAvatar.textContent = currentAvatarEmoji;
-    currentSavedName = user.user_metadata?.full_name || '';
-    profileNameInput.value = currentSavedName;
-    profileCardName.textContent = currentSavedName || user.email.split('@')[0];
-    lockProfileForm();
+// Export CSV Favorit
+if (exportFavoritesBtn) {
+    exportFavoritesBtn.addEventListener('click', async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data } = await supabaseClient.from('favorites').select('keyword, result').eq('user_id', user.id);
+        if (!data || data.length === 0) return alert('No favorite data to export!');
+        const rows = data.map(item => [`"${item.keyword}"`, `"${item.result.replace(/"/g, '""')}"`]);
+        downloadCSV("keymatch_favorites.csv", ["Main Keyword", "Scopus Query Syntax"], rows);
+    });
 }
 
-function unlockProfileForm() {
-    profileNameInput.disabled = false;
-    profileNameInput.classList.replace('bg-slate-50', 'bg-white');
-    changeAvatarBtn.disabled = false;
-    changeAvatarBtn.classList.remove('opacity-0', 'scale-75', 'pointer-events-none');
-    editProfileBtn.classList.add('hidden');
-    editActionGroup.classList.remove('hidden');
-}
+// KODE AUTO-LOGIN 
+async function checkCurrentSession() {
+    // 1. Cek apakah ada sesi login aktif di browser dari Supabase
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    
+    if (error) {
+        console.error("Gagal mengecek sesi:", error.message);
+        return;
+    }
 
-function lockProfileForm() {
-    profileNameInput.disabled = true;
-    profileNameInput.classList.replace('bg-white', 'bg-slate-50');
-    changeAvatarBtn.disabled = true;
-    changeAvatarBtn.classList.add('opacity-0', 'scale-75', 'pointer-events-none');
-    editProfileBtn.classList.remove('hidden');
-    editActionGroup.classList.add('hidden');
-}
-
-function revertProfileForm() {
-    loadUserProfileData();
-}
-
-function rotateAvatarEmoji() {
-    let nextIdx = Math.floor(Math.random() * cuteAvatars.length);
-    profileAvatar.textContent = cuteAvatars[nextIdx];
-}
-
-async function saveUserProfile() {
-    const name = profileNameInput.value.trim();
-    if (!name) return alert('Nama wajib diisi!');
-    const { error } = await supabaseClient.auth.updateUser({ data: { full_name: name, avatar_emoji: profileAvatar.textContent } });
-    if (!error) {
-        showToastNotification('Profil Diperbarui!');
-        loadUserProfileData();
+    // 2. Jika user sudah login sebelumnya
+    if (session && session.user) {
+        console.log("Sesi aktif ditemukan:", session.user.email);
+        
+        const authSection = document.getElementById('authSection');
+        const mainAppSection = document.getElementById('mainAppSection');
+        
+        // Sembunyikan halaman login, langsung buka dashboard utama
+        if (authSection) authSection.classList.add('hidden');
+        if (mainAppSection) mainAppSection.classList.remove('hidden');
+        
+        // 3. Sinkronisasi nama email di pojok kanan/kiri atas
+        if (userDisplayEmail) {
+            userDisplayEmail.textContent = (session.user.user_metadata?.full_name) 
+                ? session.user.user_metadata.full_name 
+                : session.user.email;
+        }
+        
+        // 4. Otomatis jalankan fungsi muat riwayat data agar langsung muncul
+        if (typeof handleResize === 'function') handleResize();
+        if (typeof renderHistory === 'function') renderHistory();
+    } else {
+        console.log("Tidak ada sesi aktif, silakan login.");
     }
 }
+
+// Jalankan pengecekan otomatis setiap kali halaman web di-refresh atau dibuka
+document.addEventListener('DOMContentLoaded', () => {
+    checkCurrentSession();
+});
