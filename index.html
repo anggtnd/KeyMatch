@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scopus Keyword Helper</title>
+    <title>KeyMatch - Scopus Keywords Helper</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Tailwind configuration for Dark Mode
@@ -17,35 +17,44 @@
     <div id="authSection" class="container mx-auto max-w-md px-4 py-20">
         <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
             <h1 class="text-3xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-2 tracking-tight">KeyMatch</h1>
-            <p class="text-slate-400 text-xs mb-6">Silakan masuk atau daftar akun untuk menggunakan KeyMatch</p>
+            <p class="text-slate-400 text-xs mb-6">Please sign in or register to use KeyMatch</p>
             
             <div class="space-y-4 text-left">
                 <div>
                     <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
-                    <input type="email" id="authEmail" placeholder="nama@gmail.com" 
+                    <input type="email" id="authEmail" placeholder="yourname@gmail.com" 
                            class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Password</label>
-                    <input type="password" id="authPassword" placeholder="••••••••" 
-                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
+                    <div class="relative mt-1 flex items-center">
+                        <input type="password" id="authPassword" placeholder="••••••••" 
+                               class="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
+                        <button type="button" id="togglePasswordVisibility" class="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none">
+                            <!-- SVG Eye Icon -->
+                            <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <p class="text-[11px] text-slate-400 mt-1.5 italic leading-tight">
-                        *Keterangan sandi: Minimal 6 karakter (boleh kombinasi huruf, angka, atau simbol).
+                        *Password details: Minimum 6 characters (letters, numbers, or symbols).
                     </p>
                 </div>
                 
                 <button id="loginBtn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-all duration-200 active:scale-[0.99] shadow-sm">
-                    Masuk
+                    Sign In
                 </button>
                 <button id="registerBtn" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 text-slate-700 font-medium py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
-                    Belum punya akun? Daftar Baru
+                    Don't have an account? Register New
                 </button>
             </div>
         </div>
     </div>
 
     <!-- MAIN APP SECTION -->
-    <main id="mainAppSection" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-900 relative">
+    <main id="mainAppSection" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-200/60 dark:bg-slate-950 relative">
         
         <!-- Mobile Header -->
         <header class="md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
@@ -74,7 +83,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-xl font-extrabold text-indigo-700 dark:text-indigo-400 tracking-tight">Menu</h1>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Halo, <span id="userDisplayEmail" class="font-medium text-slate-600 dark:text-slate-300">user@mail.com</span></p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Welcome, <span id="userDisplayEmail" class="font-medium text-slate-600 dark:text-slate-300">user@mail.com</span></p>
                     </div>
                     <button id="closeSidebarBtn" class="p-1.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-150 focus:outline-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,21 +95,21 @@
                 <!-- Dark Mode Quick Toggle inside Sidebar -->
                 <button id="darkModeToggle" class="w-full flex items-center justify-between px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
                     <span>🌙 Dark Mode</span>
-                    <span id="darkModeStatus" class="text-indigo-600 dark:text-indigo-400">Nonaktif</span>
+                    <span id="darkModeStatus" class="text-indigo-600 dark:text-indigo-400">Disabled</span>
                 </button>
 
                 <nav class="space-y-1">
                     <button id="menuSearch" class="w-full flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
-                        🔎 <span>Pencarian Utama</span>
+                        🔎 <span>Main Search</span>
                     </button>
                     <button id="menuFavorites" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
-                        ⭐ <span>Kata Kunci Favorit</span>
+                        ⭐ <span>Favorite Keywords</span>
                     </button>
                     <button id="menuHistory" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
-                        📜 <span>Riwayat Pencarian</span>
+                        📜 <span>Search History</span>
                     </button>
                     <button id="menuProfile" class="w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150 active:scale-[0.98]">
-                        👤 <span>Profil Saya</span>
+                        👤 <span>My Profile</span>
                     </button>
                 </nav>
             </div>
@@ -125,13 +134,13 @@
             <div id="pageSearch" class="space-y-6">
                 <div class="mb-4">
                     <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Scopus Keywords Helper</h2>
-                    <p class="text-slate-400 text-sm">Cari padanan kata ilmiah global secara otomatis.</p>
+                    <p class="text-slate-400 text-sm">Find global scientific matching words automatically.</p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                     <div class="relative flex items-center w-full gap-2 sm:flex-row flex-col">
                         <div class="relative flex-grow w-full flex items-center">
-                            <input type="text" id="keywordInput" placeholder="Masukkan kata kunci (Contoh: government)..." 
+                            <input type="text" id="keywordInput" placeholder="Enter keyword (e.g., government, framework)..." 
                                    class="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text">
                             <button id="clearBtn" type="button" class="absolute right-4 text-slate-300 hover:text-slate-500 transition p-1.5 focus:outline-none hidden active:scale-75 z-10">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,60 +149,40 @@
                             </button>
                         </div>
                         <button id="searchBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 whitespace-nowrap active:scale-[0.97] shadow-sm shadow-indigo-100 sm:w-auto w-full">
-                            Cari Kata
+                            Search Word
                         </button>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-3 flex items-center gap-1.5 px-1 italic">
-                        Gunakan istilah dalam bahasa Inggris untuk mendapatkan cakupan database Scopus yang lebih optimal.
-                    </p>
                 </div>
 
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto opacity-80">
-                    <div class="p-4 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-2xl flex gap-3 items-start">
-                        <span class="text-xl">💡</span>
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">Tips Input</h4>
-                            <p class="text-xs text-slate-500 mt-1">Gunakan kata tunggal atau frasa pendek (misal: <i>e-government</i>) untuk hasil maksimal.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-2xl flex gap-3 items-start">
-                        <span class="text-xl">🧬</span>
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">Standar Akademis</h4>
-                            <p class="text-xs text-slate-500 mt-1">Padanan kata otomatis disaring agar lolos dari daftar kata umum non-ilmiah Scopus.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-2xl flex gap-3 items-start">
-                        <span class="text-xl">⚡</span>
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">One-Click Copy</h4>
-                            <p class="text-xs text-slate-500 mt-1">Klik pada badge hasil pencarian untuk menyalin kata tunggal ke clipboard instan.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Results -->
+                <!-- Results container section -->
                 <div id="resultSection" class="hidden space-y-6">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                        <div class="flex justify-between items-center mb-3">
-                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Klik kata di bawah untuk menyalin:</h2>
-                            <!-- Save to Favorite Action Button -->
-                            <button id="saveToFavoriteBtn" class="text-xs bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 hover:bg-amber-100 transition">
-                                ⭐ <span>Simpan ke Favorit</span>
-                            </button>
-                        </div>
-                        <div id="keywordsContainer" class="flex flex-wrap gap-2"></div>
+                    <!-- Dynamic Warning Area inside results container -->
+                    <div id="searchWarningContainer" class="hidden bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 p-4 rounded-xl border border-amber-200/50 dark:border-amber-900/50 font-medium text-sm text-center">
+                        ⚠️ No valid scientific keywords found. Please try another scientific or academic term.
                     </div>
 
-                    <div class="bg-indigo-50/70 dark:bg-indigo-950/20 p-6 rounded-2xl border border-indigo-100/60 dark:border-indigo-900/40">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
-                            <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 tracking-tight">Keywords Otomatis (OR Syntax)</h3>
-                            <button id="copyQueryBtn" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-all duration-200 active:scale-95 shadow-sm self-start sm:self-auto">
-                                Copy Semua Query
-                            </button>
+                    <!-- Dynamic Success Area -->
+                    <div id="searchSuccessContainer" class="space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-3">
+                                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Click the words below to copy:</h2>
+                                <button id="saveToFavoriteBtn" class="text-xs bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 hover:bg-amber-100 transition">
+                                    ⭐ <span>Save to Favorites</span>
+                                </button>
+                            </div>
+                            <div id="keywordsContainer" class="flex flex-wrap gap-2"></div>
                         </div>
-                        <textarea id="queryResult" readonly rows="3" 
-                                  class="w-full p-3 bg-white dark:bg-slate-700 rounded-xl border border-indigo-100 dark:border-slate-600 text-sm font-mono text-indigo-800 dark:text-indigo-300 resize-none focus:outline-none select-all leading-relaxed shadow-inner"></textarea>
+
+                        <div class="bg-indigo-50/70 dark:bg-indigo-950/20 p-6 rounded-2xl border border-indigo-100/60 dark:border-indigo-900/40">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
+                                <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 tracking-tight">Automatic Keywords (OR Syntax)</h3>
+                                <button id="copyQueryBtn" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-semibold transition-all duration-200 active:scale-95 shadow-sm self-start sm:self-auto">
+                                    Copy All Query
+                                </button>
+                            </div>
+                            <textarea id="queryResult" readonly rows="3" 
+                                      class="w-full p-3 bg-white dark:bg-slate-700 rounded-xl border border-indigo-100 dark:border-slate-600 text-sm font-mono text-indigo-800 dark:text-indigo-300 resize-none focus:outline-none select-all leading-relaxed shadow-inner"></textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -203,19 +192,29 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Sedang mengumpulkan padanan kata ilmiah...</span>
+                    <span>Gathering global scientific matching words...</span>
                 </div>
             </div>
 
             <!-- PAGE FAVORITES -->
             <div id="pageFavorites" class="hidden space-y-6">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Kata Kunci Favorit</h2>
-                    <p class="text-slate-400 text-sm">Akses cepat kata kunci pilihan utama proyek riset Anda.</p>
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Favorite Keywords</h2>
+                        <p class="text-slate-400 text-sm">Quick access to selected keywords for your research project.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="exportFavoritesBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1">
+                            📄 Export CSV
+                        </button>
+                        <button id="clearFavoritesBtn" class="bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:text-rose-400 text-rose-600 px-4 py-2 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900 transition">
+                            🗑️ Clear All
+                        </button>
+                    </div>
                 </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700">
                     <div id="favoritesListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                        <p class="text-slate-400 italic text-center py-4">Belum ada kata kunci favorit yang disimpan.</p>
+                        <p class="text-slate-400 italic text-center py-4">No favorite keywords saved yet.</p>
                     </div>
                 </div>
             </div>
@@ -224,22 +223,21 @@
             <div id="pageHistory" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <div>
-                        <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Riwayat Pencarian</h2>
-                        <p class="text-slate-400 text-sm">Daftar kata kunci yang pernah Anda cari sebelumnya.</p>
+                        <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Search History</h2>
+                        <p class="text-slate-400 text-sm">List of keywords you have searched previously.</p>
                     </div>
                     <div class="flex gap-2">
-                        <!-- Export Button Feature -->
                         <button id="exportHistoryBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1">
                             📄 Export CSV
                         </button>
                         <button id="clearHistoryBtn" class="bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:text-rose-400 text-rose-600 px-4 py-2 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900 transition">
-                            🗑️ Hapus Semua
+                            🗑️ Clear All
                         </button>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                     <div id="historyListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 text-sm text-slate-600 dark:text-slate-300">
-                        <p class="text-slate-400 italic text-center py-4">Belum ada riwayat pencarian.</p>
+                        <p class="text-slate-400 italic text-center py-4">No search history available.</p>
                     </div>
                 </div>
             </div>
@@ -247,8 +245,8 @@
             <!-- PAGE PROFILE -->
             <div id="pageProfile" class="hidden space-y-6">
                 <div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Profil Pengguna</h2>
-                    <p class="text-slate-400 text-sm">Kelola informasi data diri, avatar lucu, dan status keamanan akun Anda.</p>
+                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">User Profile</h2>
+                    <p class="text-slate-400 text-sm">Manage your data, account settings, and profile details.</p>
                 </div>
                 
                 <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-hidden">
@@ -260,13 +258,10 @@
                                 <div id="profileAvatar" class="w-24 h-24 rounded-2xl bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-4xl font-bold border-4 border-white dark:border-slate-800 shadow-md select-none transition-all duration-200">
                                     A
                                 </div>
-                                <button id="changeAvatarBtn" disabled class="absolute -bottom-1 -right-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 p-1.5 rounded-xl shadow-sm transition opacity-0 scale-75 pointer-events-none">
-                                    <span class="text-sm">✨</span>
-                                </button>
                             </div>
                             <div class="mb-2">
-                                <h3 id="profileCardName" class="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">Nama Pengguna</h3>
-                                <p class="text-xs font-medium text-indigo-500/80 mt-1 bg-indigo-50/50 dark:bg-indigo-950/40 px-2.5 py-0.5 rounded-lg inline-block">Riset Terintegrasi</p>
+                                <h3 id="profileCardName" class="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">Username</h3>
+                                <p class="text-xs font-medium text-indigo-500/80 mt-1 bg-indigo-50/50 dark:bg-indigo-950/40 px-2.5 py-0.5 rounded-lg inline-block">Integrated Researcher</p>
                             </div>
                         </div>
 
@@ -274,30 +269,36 @@
 
                         <div class="space-y-4">
                             <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Terdaftar</label>
+                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Registered Email</label>
                                 <p id="profileEmailDisplay" class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 bg-slate-50 dark:bg-slate-700 px-4 py-2.5 rounded-xl border border-slate-100 dark:border-slate-600 select-none">
                                     user@mail.com
                                 </p>
                             </div>
 
                             <div>
-                                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama Lengkap</label>
-                                <input type="text" id="profileNameInput" placeholder="Belum mengatur nama..." disabled
+                                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Full Name</label>
+                                <input type="text" id="profileNameInput" placeholder="No name set yet..." disabled
                                        class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150 select-text">
+                            </div>
+
+                            <!-- Input Baru: Ganti Password -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">New Password (Optional)</label>
+                                <input type="password" id="profilePasswordInput" disabled placeholder="Leave blank if you don't want to change" class="w-full bg-slate-50 dark:bg-slate-900/60 text-slate-400 dark:text-slate-400 px-4 py-3 rounded-xl text-sm border border-slate-200/60 dark:border-slate-700 font-medium transition focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                             </div>
                         </div>
 
                         <div class="pt-2">
                             <button id="editProfileBtn" class="w-full bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 text-indigo-700 font-semibold py-2.5 rounded-xl transition border border-indigo-100 dark:border-indigo-900 text-sm active:scale-[0.99]">
-                                📝 Edit Profil Saya
+                                📝 Edit My Profile
                             </button>
                             
                             <div id="editActionGroup" class="hidden grid grid-cols-2 gap-3 w-full">
                                 <button id="saveProfileBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm shadow-sm active:scale-[0.99]">
-                                    ✨ Simpan
+                                    Save
                                 </button>
                                 <button id="cancelProfileBtn" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
-                                    Batal
+                                    Cancel
                                 </button>
                             </div>
                         </div>
@@ -305,7 +306,7 @@
                         <hr class="border-slate-100 dark:border-slate-700">
 
                         <button id="logoutBtn" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm transition-all duration-200 border border-rose-100/40 active:scale-[0.99]">
-                            Keluar dari KeyMatch
+                            Sign Out from KeyMatch
                         </button>
                     </div>
                 </div>
@@ -324,7 +325,7 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50 font-medium">
-        Berhasil!
+        Success!
     </div>
 
     <script src="app.js"></script>
