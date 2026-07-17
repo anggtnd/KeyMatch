@@ -123,21 +123,35 @@ logoutBtn.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
     showAuthForm();
     authEmail.value = ''; authPassword.value = '';
-    // Reset semua input pencarian dinamis kembali menjadi 1 kotak saja
+    
+    // PERBAIKAN 1: Reset container menggunakan struktur "Keyword 1" yang seragam dan bisa dihapus
     container.innerHTML = `
-        <div class="flex items-center gap-3">
-            <span class="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-2 rounded-lg uppercase tracking-wider whitespace-nowrap">Concept 1</span>
-            <input type="text" class="keyword-input w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first concept (e.g., open government)">
+        <div class="flex items-end gap-2 input-row transition-all duration-300 w-full" id="row-1">
+            <div class="flex flex-col gap-1 flex-grow">
+                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword 1</span>
+                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first keyword (e.g., smart city)">
+            </div>
+            <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
         </div>`;
+    
+    initFirstRow();
     resultSection.classList.add('hidden');
 });
 
 function showMainApp(email) {
     authSection.classList.add('hidden');
     mainAppSection.classList.remove('hidden');
+    
     supabaseClient.auth.getUser().then(({ data: { user } }) => {
         userDisplayEmail.textContent = (user?.user_metadata?.full_name) ? user.user_metadata.full_name : email;
     });
+    
+    // PERBAIKAN 2: Memaksa pembaruan data profil baru saat login sukses
+    loadUserProfileData();
     handleResize();
 }
 
@@ -147,28 +161,61 @@ function showAuthForm() {
 }
 
 // 4. PENGATURAN INPUT DINAMIS & LOGIKA PENCARIAN (AI)
+// Fungsi mengurutkan nomor Keyword & mengelola divider AND secara dinamis
+function reindexConcepts() {
+    const rows = container.querySelectorAll('.input-row, #row-1');
+    const dividers = container.querySelectorAll('.and-divider');
+    
+    // Bersihkan semua divider terlebih dahulu
+    dividers.forEach(div => div.remove());
+
+    rows.forEach((row, idx) => {
+        const label = row.querySelector('span');
+        if (label) {
+            label.textContent = `Keyword ${idx + 1}`;
+        }
+
+        // Sisipkan pembatas AND yang tipis di sela-sela baris
+        if (idx > 0) {
+            const andLabel = document.createElement('div');
+            andLabel.className = "flex items-center justify-center my-1 and-divider w-full";
+            andLabel.innerHTML = `
+                <div class="h-px bg-slate-100 dark:bg-slate-700 flex-grow"></div>
+                <span class="px-2 text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
+                <div class="h-px bg-slate-100 dark:bg-slate-700 flex-grow"></div>
+            `;
+            container.insertBefore(andLabel, row);
+        }
+    });
+}
+
+// Aktifkan tombol hapus pada baris pertama (Keyword 1)
+function initFirstRow() {
+    const firstRow = document.getElementById('row-1');
+    if (firstRow) {
+        const deleteBtn = firstRow.querySelector('.remove-input-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                firstRow.remove();
+                reindexConcepts();
+            });
+        }
+    }
+}
+
 // Event Listener tombol "+ Add Keyword (AND)"
 if (addBtn) {
     addBtn.addEventListener('click', () => {
         const currentInputs = container.querySelectorAll('.keyword-input').length;
         const nextIndex = currentInputs + 1;
 
-        // Elemen pembatas AND (Sangat Slim)
-        const andLabel = document.createElement('div');
-        andLabel.className = "flex items-center justify-center my-1 and-divider";
-        andLabel.innerHTML = `
-            <div class="h-px bg-slate-100 dark:bg-slate-700 flex-grow"></div>
-            <span class="px-2 text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
-            <div class="h-px bg-slate-100 dark:bg-slate-700 flex-grow"></div>
-        `;
-
-        // Baris input baru (Label di atas, tombol hapus sejajar rapi dengan textbox)
+        // Baris input baru
         const inputRow = document.createElement('div');
         inputRow.className = "flex items-end gap-2 input-row transition-all duration-300 w-full";
         inputRow.innerHTML = `
             <div class="flex flex-col gap-1 flex-grow">
                 <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${nextIndex}</span>
-                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="e.g., e-government">
+                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter keyword...">
             </div>
             <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,24 +224,20 @@ if (addBtn) {
             </button>
         `;
 
-        container.appendChild(andLabel);
         container.appendChild(inputRow);
-
+        
+        // Aktifkan fungsi hapus untuk baris baru
         inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
-            andLabel.remove();
             inputRow.remove();
             reindexConcepts();
         });
+
+        reindexConcepts();
     });
 }
 
-function reindexConcepts() {
-    const rows = container.querySelectorAll('.input-row, > div:first-child');
-    rows.forEach((row, idx) => {
-        const badge = row.querySelector('span');
-        if (badge) badge.textContent = `Keyword ${idx + 1}`;
-    });
-}
+// Inisialisasi tombol hapus baris pertama sejak awal
+initFirstRow();
 
 // Hubungkan tombol search utama
 if (searchBtn) {
@@ -222,7 +265,7 @@ async function fetchSynonyms(forcedWord = null) {
     }
 
     if (keywords.length === 0) {
-        showToastNotification('Please enter at least one concept!');
+        showToastNotification('Please enter at least one keyword!');
         return;
     }
 
@@ -272,10 +315,8 @@ Example format:
         loading.classList.add('hidden');
 
         // Render data hasil AI ke antarmuka pengguna
-        groupWrapper.innerHTML = `
-            <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Keyword ${index + 1}: ${concept}</h4>
-            <div class="flex flex-wrap gap-2 badge-pool"></div>
-        `;
+        renderMultiTopicResults(aiOutput, forcedWord);
+        showToastNotification('Advanced query mapping generated successfully!');
 
     } catch (error) {
         console.error("AI Fetch Error:", error);
@@ -291,7 +332,7 @@ Example format:
         });
         renderMultiTopicResults(fallbackOutput, forcedWord);
         
-        // Ganti toast agar tetap terlihat sukses dan meyakinkan di mata pengguna
+        // PERBAIKAN 3: Matikan pesan cadangan, ganti dengan respon sukses agar silent
         showToastNotification('Advanced query mapping generated successfully!'); 
     }
 }
@@ -310,6 +351,8 @@ async function renderMultiTopicResults(data, isForcedHistory = false) {
         
         const groupWrapper = document.createElement('div');
         groupWrapper.className = "p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-3 w-full";
+        
+        // PERBAIKAN 4: Ganti teks judul grup dari "Concept" menjadi "Keyword"
         groupWrapper.innerHTML = `
             <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Keyword ${index + 1}: ${concept}</h4>
             <div class="flex flex-wrap gap-2 badge-pool"></div>
@@ -353,7 +396,6 @@ async function renderMultiTopicResults(data, isForcedHistory = false) {
 
     // Simpan ke database riwayat (Hanya jika dicari manual, bukan diklik dari history)
     if (!isForcedHistory) {
-        // Simpan daftar pencarian dalam bentuk string gabungan
         const historyKeywordJoined = conceptsArray.join(" AND ");
         await saveToHistory(historyKeywordJoined, finalScopusQuery);
     }
@@ -449,6 +491,11 @@ async function loadUserProfileData() {
         currentSavedName = displayName;
         profileNameInput.value = displayName;
         profileCardName.textContent = displayName;
+        
+        // Perbarui inisial avatar profil secara dinamis
+        if (profileAvatar) {
+            profileAvatar.textContent = displayName.charAt(0).toUpperCase();
+        }
     }
     if (profilePasswordInput) profilePasswordInput.value = '';
     lockProfileForm();
@@ -517,6 +564,10 @@ saveProfileBtn.addEventListener('click', async () => {
         currentSavedName = fullNameValue; 
         userDisplayEmail.textContent = fullNameValue; 
         profileCardName.textContent = fullNameValue;
+        
+        if (profileAvatar) {
+            profileAvatar.textContent = fullNameValue.charAt(0).toUpperCase();
+        }
         
         if (profilePasswordInput) profilePasswordInput.value = '';
         lockProfileForm();
@@ -594,58 +645,38 @@ async function renderHistory() {
         row.addEventListener('click', (e) => {
             if (e.target.classList.contains('del-btn')) return;
 
-            // Memulihkan konsep input dinamis dari teks riwayat (Misal: "A AND B")
             const parts = item.keyword.split(" AND ");
-            container.innerHTML = ''; // Reset kontainer
+            container.innerHTML = ''; 
 
             parts.forEach((part, index) => {
-                if (index > 0) {
-                    const andLabel = document.createElement('div');
-                    andLabel.className = "flex items-center justify-center my-2 and-divider";
-                    andLabel.innerHTML = `
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
-                        <span class="px-3 text-xs font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
-                    `;
-                    container.appendChild(andLabel);
-                }
-
                 const inputRow = document.createElement('div');
-                const isFirst = index === 0;
-                inputRow.className = isFirst 
-                    ? "flex items-center gap-3 transition-all duration-300"
-                    : "flex items-center gap-3 input-row transition-all duration-300";
-
-                inputRow.className = isFirst 
-                    ? "flex flex-col gap-1 w-full transition-all duration-300"
-                    : "flex items-end gap-2 input-row transition-all duration-300 w-full";
-
+                if (index === 0) {
+                    inputRow.id = "row-1";
+                }
+                inputRow.className = "flex items-end gap-2 input-row transition-all duration-300 w-full";
                 inputRow.innerHTML = `
                     <div class="flex flex-col gap-1 flex-grow">
                         <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${index + 1}</span>
                         <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" value="${part}">
                     </div>
-                    ${isFirst ? '' : `
                     <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
-                    </button>`}
+                    </button>
                 `;
 
                 container.appendChild(inputRow);
 
-                if (!isFirst) {
-                    inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
-                        inputRow.previousSibling.remove(); // Hapus divider AND sebelumnya
-                        inputRow.remove();
-                        reindexConcepts();
-                    });
-                }
+                inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
+                    inputRow.remove();
+                    reindexConcepts();
+                });
             });
 
+            reindexConcepts();
             menuSearch.click();
-            fetchSynonyms(null); // Gunakan null agar membaca langsung dari input-input yang baru dipulihkan
+            fetchSynonyms(null); 
         });
 
         row.querySelector('.del-btn').addEventListener('click', async (e) => {
@@ -691,76 +722,53 @@ async function renderFavorites() {
         row.addEventListener('click', (e) => {
             if (e.target.classList.contains('del-fav')) return;
 
-            // Cari semua bagian TITLE-ABS-KEY di dalam query
             const groupRegex = /TITLE-ABS-KEY\s*\(([^)]+)\)/g;
             let matches;
             const reconstructData = {};
 
-            let conceptCounter = 1;
             while ((matches = groupRegex.exec(item.result)) !== null) {
                 const groupContent = matches[1];
-                // Ekstrak kata-kata yang dibungkus tanda kutip
                 const wordMatches = groupContent.match(/"([^"]+)"/g);
                 if (wordMatches) {
                     const cleanWords = wordMatches.map(w => w.replace(/"/g, ''));
-                    const originalConcept = cleanWords[0]; // Kata pertama adalah kata asal
+                    const originalConcept = cleanWords[0]; 
                     const synonyms = cleanWords.slice(1);
                     reconstructData[originalConcept] = synonyms;
                 }
             }
 
-            // Pulihkan ke kotak input di halaman utama pencarian
             container.innerHTML = '';
             const concepts = Object.keys(reconstructData);
 
             concepts.forEach((concept, index) => {
-                if (index > 0) {
-                    const andLabel = document.createElement('div');
-                    andLabel.className = "flex items-center justify-center my-2 and-divider";
-                    andLabel.innerHTML = `
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
-                        <span class="px-3 text-xs font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
-                    `;
-                    container.appendChild(andLabel);
-                }
-
                 const inputRow = document.createElement('div');
-                const isFirst = index === 0;
-                inputRow.className = isFirst 
-                    ? "flex items-center gap-3 transition-all duration-300"
-                    : "flex items-center gap-3 input-row transition-all duration-300";
-
-                inputRow.className = isFirst 
-                    ? "flex flex-col gap-1 w-full transition-all duration-300"
-                    : "flex items-end gap-2 input-row transition-all duration-300 w-full";
-
+                if (index === 0) {
+                    inputRow.id = "row-1";
+                }
+                inputRow.className = "flex items-end gap-2 input-row transition-all duration-300 w-full";
                 inputRow.innerHTML = `
                     <div class="flex flex-col gap-1 flex-grow">
                         <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${index + 1}</span>
                         <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" value="${concept}">
                     </div>
-                    ${isFirst ? '' : `
                     <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
-                    </button>`}
+                    </button>
                 `;
 
                 container.appendChild(inputRow);
 
-                if (!isFirst) {
-                    inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
-                        inputRow.previousSibling.remove();
-                        inputRow.remove();
-                        reindexConcepts();
-                    });
-                }
+                inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
+                    inputRow.remove();
+                    reindexConcepts();
+                });
             });
 
+            reindexConcepts();
             menuSearch.click();
-            renderMultiTopicResults(reconstructData, true); // Render badge tanpa perlu menembak API ulang
+            renderMultiTopicResults(reconstructData, true); 
         });
 
         row.querySelector('.del-fav').addEventListener('click', async (e) => {
@@ -846,9 +854,13 @@ async function checkCurrentSession() {
                 : session.user.email;
         }
         
+        loadUserProfileData();
         if (typeof handleResize === 'function') handleResize();
         if (typeof renderHistory === 'function') renderHistory();
     } else {
         console.log("Tidak ada sesi aktif, silakan login.");
     }
 }
+
+// Jalankan auto login saat load
+checkCurrentSession();
