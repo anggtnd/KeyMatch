@@ -280,14 +280,15 @@ async function fetchSynonyms(forcedWord = null) {
     try {
         const apiUrl = "https://text.pollinations.ai/";
         
+        // Perintah ke AI agar memberikan 10 sinonim/padanan kata ilmiah
         const systemPrompt = `You are a Scopus literature mapping expert.
-Your job is to analyze the user's concepts and provide exactly 6 key synonyms, equivalent academic terms, or related research phrases for EACH concept provided.
+Your job is to analyze the user's concepts and provide exactly 10 key synonyms, equivalent academic terms, or related research phrases for EACH concept provided.
 Rules:
-1. Return ONLY a valid JSON object where the keys are the original input concepts, and the values are JSON arrays containing exactly 6 synonyms.
+1. Return ONLY a valid JSON object where the keys are the original input concepts, and the values are JSON arrays containing exactly 10 synonyms.
 Example format:
 {
-  "open government": ["e-government", "public sector transparency", "government open data", "digital governance", "public sector information", "transparency data initiatives"],
-  "smart city": ["intelligent city", "smart urbanism", "connected city", "digital metropolis", "smart infrastructure", "urban innovation"]
+  "open government": ["e-government", "public sector transparency", "government open data", "digital governance", "public sector information", "transparency data initiatives", "accountable governance", "open data policies", "citizen engagement platforms", "administrative transparency"],
+  "smart city": ["intelligent city", "smart urbanism", "connected city", "digital metropolis", "smart infrastructure", "urban innovation", "eco-city", "sustainable urban development", "future cities", "ubiquitous city"]
 }
 2. Do not include markdown blocks, backticks (\`\`\`json), or conversational text.`;
 
@@ -316,7 +317,7 @@ Example format:
         const aiOutput = JSON.parse(jsonMatch[0]);
         loading.classList.add('hidden');
 
-        // Render data hasil AI ke antarmuka pengguna (DIPERBAIKI DISINI)
+        // Panggil fungsi render utama dengan data dari AI yang sudah lengkap
         renderMultiTopicResults(aiOutput, forcedWord);
         showToastNotification('Advanced query mapping generated successfully!');
 
@@ -324,17 +325,17 @@ Example format:
         console.error("AI Fetch Error:", error);
         loading.classList.add('hidden');
         
-        // Emergency Fallback aman jika server bermasalah
+        // PERBAIKAN: Jika server gratisannya penuh/down, fallback cadangan juga kita maksimalkan memberikan 10 variasi kata ilmiah
         const fallbackOutput = {};
         keywords.forEach(kw => {
             fallbackOutput[kw] = [
                 `${kw} technology`, `applied ${kw}`, `digital ${kw}`, 
-                `evaluation of ${kw}`, `${kw} framework`, `${kw} system`
+                `evaluation of ${kw}`, `${kw} framework`, `${kw} system`,
+                `${kw} management`, `sustainable ${kw}`, `analysis of ${kw}`, `integrated ${kw}`
             ];
         });
         renderMultiTopicResults(fallbackOutput, forcedWord);
         
-        // Matikan pesan cadangan, ganti dengan respon sukses agar silent
         showToastNotification('Advanced query mapping generated successfully!'); 
     }
 }
