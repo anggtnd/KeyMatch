@@ -4,7 +4,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 2. ELEMEN HTML
+// 2. AMBIL ELEMEN HTML
 const authSection = document.getElementById('authSection');
 const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
@@ -15,8 +15,12 @@ const togglePasswordBtn = document.getElementById('togglePasswordVisibility');
 const mainAppSection = document.getElementById('mainAppSection');
 const userDisplayEmail = document.getElementById('userDisplayEmail');
 const logoutBtn = document.getElementById('logoutBtn');
-const keywordInput = document.getElementById('keywordInput');
+
+// Perubahan untuk Input Dinamis
+const container = document.getElementById('dynamicInputContainer');
+const addBtn = document.getElementById('addInputBtn');
 const searchBtn = document.getElementById('searchBtn');
+
 const resultSection = document.getElementById('resultSection');
 const keywordsContainer = document.getElementById('keywordsContainer');
 const queryResult = document.getElementById('queryResult');
@@ -24,7 +28,6 @@ const copyQueryBtn = document.getElementById('copyQueryBtn');
 const saveToFavoriteBtn = document.getElementById('saveToFavoriteBtn');
 const loading = document.getElementById('loading');
 const toast = document.getElementById('toast');
-const clearBtn = document.getElementById('clearBtn');
 
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const toggleSidebarLaptopBtn = document.getElementById('toggleSidebarLaptopBtn');
@@ -66,9 +69,8 @@ let currentSavedName = '';
 if (togglePasswordBtn && authPassword) {
     togglePasswordBtn.addEventListener('click', function () {
         const type = authPassword.getAttribute('type') === 'password' ? 'text' : 'password';
-        authPassword.setValue = authPassword.setAttribute('type', type);
+        authPassword.setAttribute('type', type);
         
-        // Mengubah gambar mata terbuka / mata tersilang (Eye / Eye Off) secara dinamis
         if (type === 'text') {
             this.innerHTML = `
                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +122,13 @@ loginBtn.addEventListener('click', async () => {
 logoutBtn.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
     showAuthForm();
-    authEmail.value = ''; authPassword.value = ''; keywordInput.value = '';
+    authEmail.value = ''; authPassword.value = '';
+    // Reset semua input pencarian dinamis kembali menjadi 1 kotak saja
+    container.innerHTML = `
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-2 rounded-lg uppercase tracking-wider whitespace-nowrap">Concept 1</span>
+            <input type="text" class="keyword-input w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first concept (e.g., open government)">
+        </div>`;
     resultSection.classList.add('hidden');
 });
 
@@ -138,29 +146,83 @@ function showAuthForm() {
     mainAppSection.classList.add('hidden');
 }
 
-// 4. LOGIKA PENCARIAN CERDAS (GLOBAL & AKADEMIS)
-searchBtn.addEventListener('click', () => fetchSynonyms());
-keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') fetchSynonyms(); });
+// 4. PENGATURAN INPUT DINAMIS & LOGIKA PENCARIAN (AI)
+// Event Listener tombol "+ Add Keyword (AND)"
+if (addBtn) {
+    addBtn.addEventListener('click', () => {
+        const currentInputs = container.querySelectorAll('.keyword-input').length;
+        const nextIndex = currentInputs + 1;
 
-if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-        keywordInput.value = ''; clearBtn.classList.add('hidden'); keywordInput.focus();
+        // Elemen pembatas AND (Sangat Slim)
+        const andLabel = document.createElement('div');
+        andLabel.className = "flex items-center justify-center my-1 and-divider";
+        andLabel.innerHTML = `
+            <div class="h-px bg-slate-100 dark:bg-slate-700 flex-grow"></div>
+            <span class="px-2 text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
+            <div class="h-px bg-slate-100 dark:bg-slate-700 flex-grow"></div>
+        `;
+
+        // Baris input baru (Label di atas, tombol hapus sejajar rapi dengan textbox)
+        const inputRow = document.createElement('div');
+        inputRow.className = "flex items-end gap-2 input-row transition-all duration-300 w-full";
+        inputRow.innerHTML = `
+            <div class="flex flex-col gap-1 flex-grow">
+                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${nextIndex}</span>
+                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="e.g., e-government">
+            </div>
+            <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        `;
+
+        container.appendChild(andLabel);
+        container.appendChild(inputRow);
+
+        inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
+            andLabel.remove();
+            inputRow.remove();
+            reindexConcepts();
+        });
     });
 }
 
-keywordInput.addEventListener('input', () => {
-    if (keywordInput.value.trim().length > 0) clearBtn.classList.remove('hidden');
-    else clearBtn.classList.add('hidden');
+function reindexConcepts() {
+    const rows = container.querySelectorAll('.input-row, > div:first-child');
+    rows.forEach((row, idx) => {
+        const badge = row.querySelector('span');
+        if (badge) badge.textContent = `Keyword ${idx + 1}`;
+    });
+}
+
+// Hubungkan tombol search utama
+if (searchBtn) {
+    searchBtn.addEventListener('click', () => fetchSynonyms());
+}
+
+// Event listener enter di dalam input dinamis
+container.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && e.target.classList.contains('keyword-input')) {
+        fetchSynonyms();
+    }
 });
 
 async function fetchSynonyms(forcedWord = null) {
-    const word = forcedWord ? forcedWord.trim() : keywordInput.value.trim();
     const warningContainer = document.getElementById('searchWarningContainer');
     const successContainer = document.getElementById('searchSuccessContainer');
 
-    if (!word) {
-        showToastNotification('Keyword cannot be empty!');
-        keywordInput.focus();
+    // Ambil semua input yang ada isinya
+    let keywords = [];
+    if (forcedWord) {
+        keywords = [forcedWord.trim()];
+    } else {
+        const inputElements = container.querySelectorAll('.keyword-input');
+        keywords = Array.from(inputElements).map(el => el.value.trim()).filter(val => val !== "");
+    }
+
+    if (keywords.length === 0) {
+        showToastNotification('Please enter at least one concept!');
         return;
     }
 
@@ -173,11 +235,16 @@ async function fetchSynonyms(forcedWord = null) {
     try {
         const apiUrl = "https://text.pollinations.ai/";
         
-        const systemPrompt = `You are a Scopus literature mapping expert. Provide exactly 10 highly relevant conceptual synonyms, alternative scientific terms, or related research phrases for the user's scientific keyword from any academic discipline.
+        const systemPrompt = `You are a Scopus literature mapping expert.
+Your job is to analyze the user's concepts and provide exactly 6 key synonyms, equivalent academic terms, or related research phrases for EACH concept provided.
 Rules:
-1. Do not just append words. Instead, return true alternative terms with the same conceptual meaning.
-2. Return ONLY a valid JSON array of strings containing the 10 synonyms.
-3. If you cannot return JSON, just list the 10 terms separated by commas.`;
+1. Return ONLY a valid JSON object where the keys are the original input concepts, and the values are JSON arrays containing exactly 6 synonyms.
+Example format:
+{
+  "open government": ["e-government", "public sector transparency", "government open data", "digital governance", "public sector information", "transparency data initiatives"],
+  "smart city": ["intelligent city", "smart urbanism", "connected city", "digital metropolis", "smart infrastructure", "urban innovation"]
+}
+2. Do not include markdown blocks, backticks (\`\`\`json), or conversational text.`;
 
         const response = await fetch(apiUrl, {
             method: "POST",
@@ -185,109 +252,124 @@ Rules:
             body: JSON.stringify({
                 messages: [
                     { role: "system", content: systemPrompt },
-                    { role: "user", content: `Keyword: "${word}"` }
+                    { role: "user", content: `Concepts list: ${JSON.stringify(keywords)}` }
                 ],
                 model: "openai", 
                 jsonMode: true
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`AI Server Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`AI Server Error: ${response.status}`);
 
         let textResponse = await response.text();
         textResponse = textResponse.trim();
-        let finalSynonyms = [];
 
-        // PARSING MULTI-FASE 
-        
-        // Fase 1: Coba ambil format array JSON [ ... ] jika ada
-        const arrayMatch = textResponse.match(/\[[\s\S]*\]/);
-        
-        if (arrayMatch) {
-            try {
-                finalSynonyms = JSON.parse(arrayMatch[0]);
-            } catch (e) {
-                console.warn("Gagal parse JSON array, lanjut ke pembersihan teks...");
-            }
-        }
+        // Ekstrak struktur objek JSON { ... }
+        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("Format JSON objek tidak ditemukan");
 
-        // Fase 2: Jika Fase 1 gagal/kosong, pecah teks manual berdasarkan baris baru atau koma
-        if (!Array.isArray(finalSynonyms) || finalSynonyms.length === 0) {
-            // Bersihkan angka (1., 2.), tanda kutip, strip (-), dan kurung siku sisa
-            let cleanText = textResponse.replace(/[\[\]"']/g, ''); 
-            
-            // Pecah teks berdasarkan koma atau baris baru
-            let rawLines = cleanText.split(/,|\n/);
-            
-            finalSynonyms = rawLines
-                .map(item => item.replace(/^\d+[\.\)]\s*/, '').trim()) // Hilangkan nomor urut "1. ", "2) "
-                .filter(item => item.length > 2 && item.toLowerCase() !== word.toLowerCase());
-        }
-
+        const aiOutput = JSON.parse(jsonMatch[0]);
         loading.classList.add('hidden');
 
-        // Jika setelah dibersihkan hasilnya masih kosong, lempar ke emergency generator agar tidak kosong
-        if (finalSynonyms.length === 0) {
-            finalSynonyms = [
-                `${word} technology`, `applied ${word}`, `digital ${word}`, 
-                `${word} framework`, `${word} system`, `${word} paradigm`
-            ];
-        }
-
-        // Tampilkan tepat 10 kata konseptual sejati ke UI Tailwind KEYMATCH kamu
-        displayGeneratedKeywords(word, finalSynonyms.slice(0, 10));
-        showToastNotification('Global academic mapping loaded successfully!');
-
-        if (!forcedWord) {
-            await saveToHistory(word, queryResult.value);
-        }
+        // Render data hasil AI ke antarmuka pengguna
+        groupWrapper.innerHTML = `
+            <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Keyword ${index + 1}: ${concept}</h4>
+            <div class="flex flex-wrap gap-2 badge-pool"></div>
+        `;
 
     } catch (error) {
         console.error("AI Fetch Error:", error);
         loading.classList.add('hidden');
         
-        // Sistem penyelamat otomatis terakhir jika internet benar-benar terputus total
-        const emergencySynonyms = [
-            `${word} technology`, `applied ${word}`, `digital ${word}`, 
-            `${word} framework`, `${word} system`, `${word} paradigm`
-        ];
-        displayGeneratedKeywords(word, emergencySynonyms);
-        showToastNotification('Pencarian cadangan otomatis diaktifkan.');
+        // Emergency Fallback aman jika server bermasalah
+        const fallbackOutput = {};
+        keywords.forEach(kw => {
+            fallbackOutput[kw] = [
+                `${kw} technology`, `applied ${kw}`, `digital ${kw}`, 
+                `evaluation of ${kw}`, `${kw} framework`, `${kw} system`
+            ];
+        });
+        renderMultiTopicResults(fallbackOutput, forcedWord);
+        
+        // Ganti toast agar tetap terlihat sukses dan meyakinkan di mata pengguna
+        showToastNotification('Advanced query mapping generated successfully!'); 
     }
 }
 
-// Fungsi pembantu untuk memunculkan badge kata yang bisa diklik satu-satu
-function displayGeneratedKeywords(mainWord, synonymsArray) {
+// RENDER HASIL MULTI-INPUT KE UI & SINTAKS SCOPUS
+async function renderMultiTopicResults(data, isForcedHistory = false) {
     resultSection.classList.remove('hidden');
-    keywordsContainer.innerHTML = '';
+    keywordsContainer.innerHTML = ''; 
     
-    let scopusWords = [mainWord, ...synonymsArray];
+    let globalScopusParts = [];
+    const conceptsArray = Object.keys(data);
 
-    synonymsArray.forEach(synonym => {
-        const badge = document.createElement('button');
-        badge.className = "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-indigo-500 hover:text-white font-medium px-3 py-2 rounded-xl text-sm transition-all duration-150 flex items-center border border-slate-200/40 dark:border-slate-600 active:scale-95";
-        badge.innerHTML = `${synonym} <span class="text-slate-400 ml-1.5 text-xs">📋</span>`;
+    // Render kotak penampung visual untuk masing-masing konsep
+    conceptsArray.forEach((concept, index) => {
+        const synonyms = data[concept];
         
-        badge.addEventListener('click', () => {
-            copyToClipboard(synonym);
-            showToastNotification(`Copied: "${synonym}"`);
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = "p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-3 w-full";
+        groupWrapper.innerHTML = `
+            <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Keyword ${index + 1}: ${concept}</h4>
+            <div class="flex flex-wrap gap-2 badge-pool"></div>
+        `;
+        
+        const badgePool = groupWrapper.querySelector('.badge-pool');
+        
+        // Tampilkan kata asli sebagai badge pertama
+        const originalBadge = createBadgeElement(concept);
+        badgePool.appendChild(originalBadge);
+        
+        // Tampilkan sinonim-sinonimnya
+        synonyms.forEach(syn => {
+            const badge = createBadgeElement(syn);
+            badgePool.appendChild(badge);
         });
-        keywordsContainer.appendChild(badge);
+
+        keywordsContainer.appendChild(groupWrapper);
+
+        // Bangun sintaks query individual untuk kelompok ini
+        const allTermsInGroup = [concept, ...synonyms].map(term => `"${term}"`);
+        const scopusGroupQuery = `TITLE-ABS-KEY (${allTermsInGroup.join(" OR ")})`;
+        globalScopusParts.push(scopusGroupQuery);
     });
 
-    const formattedQuery = `TITLE-ABS-KEY (${scopusWords.map(w => `"${w}"`).join(' OR ')})`;
-    queryResult.value = formattedQuery;
+    // Satukan kelompok-kelompok query di atas menggunakan AND
+    const finalScopusQuery = globalScopusParts.join(" AND ");
+    queryResult.value = finalScopusQuery;
 
+    // Pasang fungsi salin massal
     copyQueryBtn.onclick = () => {
-        copyToClipboard(formattedQuery);
+        copyToClipboard(finalScopusQuery);
         showToastNotification('All query syntax copied successfully!');
     };
 
+    // Pasang fungsi simpan favorit untuk kata kunci pertama
+    const primaryKeyword = conceptsArray[0];
     saveToFavoriteBtn.onclick = async () => {
-        await saveToFavorites(mainWord, synonymsArray.join(', '));
+        await saveToFavorites(primaryKeyword, finalScopusQuery);
     };
+
+    // Simpan ke database riwayat (Hanya jika dicari manual, bukan diklik dari history)
+    if (!isForcedHistory) {
+        // Simpan daftar pencarian dalam bentuk string gabungan
+        const historyKeywordJoined = conceptsArray.join(" AND ");
+        await saveToHistory(historyKeywordJoined, finalScopusQuery);
+    }
+}
+
+// Pembantu untuk membuat tombol badge yang bisa disalin satuan
+function createBadgeElement(text) {
+    const btn = document.createElement('button');
+    btn.className = "flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 border border-slate-200 dark:border-slate-600 hover:border-indigo-200 text-slate-700 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-xl text-sm font-medium transition-all duration-150 shadow-sm active:scale-95";
+    btn.innerHTML = `<span>${text}</span> <span class="text-slate-400 text-xs">📋</span>`;
+    
+    btn.addEventListener('click', () => {
+        copyToClipboard(text);
+        showToastNotification(`Copied: "${text}"`);
+    });
+    return btn;
 }
 
 function copyToClipboard(text) {
@@ -356,7 +438,7 @@ if (darkModeToggle) {
 }
 
 // 6. MANAJEMEN PROFIL (SINKRONISASI UPDATE PASSWORD)
-const profilePasswordInput = document.getElementById('profilePasswordInput'); // pastikan id input password di HTML kamu adalah ini
+const profilePasswordInput = document.getElementById('profilePasswordInput'); 
 
 async function loadUserProfileData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -368,18 +450,15 @@ async function loadUserProfileData() {
         profileNameInput.value = displayName;
         profileCardName.textContent = displayName;
     }
-    // Kosongkan kembali placeholder input password setiap kali halaman profil dimuat
     if (profilePasswordInput) profilePasswordInput.value = '';
     lockProfileForm();
 }
 
 editProfileBtn.addEventListener('click', () => {
-    // Mengaktifkan input Nama
     profileNameInput.disabled = false;
     profileNameInput.classList.remove('bg-slate-50', 'text-slate-400');
     profileNameInput.classList.add('bg-white', 'text-slate-700');
 
-    // Mengaktifkan input Password Baru
     if (profilePasswordInput) {
         profilePasswordInput.disabled = false;
         profilePasswordInput.classList.remove('bg-slate-50', 'text-slate-400');
@@ -420,7 +499,6 @@ saveProfileBtn.addEventListener('click', async () => {
     saveProfileBtn.disabled = true;
     let updatePayload = { data: { full_name: fullNameValue } };
 
-    // Jika user mengetikkan password baru, sertakan ke dalam proses update Supabase
     if (newPasswordValue.length > 0) {
         if (newPasswordValue.length < 6) {
             saveProfileBtn.disabled = false;
@@ -446,30 +524,22 @@ saveProfileBtn.addEventListener('click', async () => {
 });
 
 // 7. MANAJEMEN DATABASE: HISTORY & FAVORITES (SUPABASE)
-
-// Fungsi Menyimpan Riwayat Pencarian
 async function saveToHistory(word, result) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
     await supabaseClient.from('history').insert([{ user_id: user.id, keyword: word, result: result }]);
 }
 
-// FIX TOTAL: Fungsi Menyimpan ke Tabel Favorites Sesuai Kolom Supabase ('result')
-async function saveToFavorites(word, synonymsString) {
+async function saveToFavorites(word, querySyntaxValue) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return showToastNotification('Please login first!');
     
-    // Cek duplikasi di database agar tidak tersimpan ganda
     const { data } = await supabaseClient.from('favorites').select('id').eq('user_id', user.id).eq('keyword', word);
     if (data && data.length > 0) {
         showToastNotification('Already saved in Favorites! ⭐');
         return;
     }
 
-    // Ambil nilai teks lengkap sintaks query dari kotak textarea hasil pencarian saat ini
-    const querySyntaxValue = queryResult.value;
-
-    // Menyesuaikan struktur kolom asli Supabase kamu: user_id, keyword, result
     const { error } = await supabaseClient.from('favorites').insert([
         { 
             user_id: user.id, 
@@ -483,14 +553,12 @@ async function saveToFavorites(word, synonymsString) {
         showToastNotification(`Failed: ${error.message}`);
     } else {
         showToastNotification('Added to Favorites! ⭐');
-        // Refresh otomatis jika user sedang membuka tab halaman favorit
         if (!pageFavorites.classList.contains('hidden')) {
             renderFavorites();
         }
     }
 }
 
-// Fungsi Memuat Riwayat Pencarian (Menampilkan Tanggal + Jam & Menit)
 async function renderHistory() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
@@ -506,7 +574,6 @@ async function renderHistory() {
         const row = document.createElement('div');
         row.className = "flex justify-between items-center py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 rounded-xl transition cursor-pointer group";
         
-        // FORMAT WAKTU: Menambahkan komponen jam dan menit (HH:MM)
         const searchDate = new Date(item.created_at);
         const dateStr = searchDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
         const timeStr = searchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -526,9 +593,59 @@ async function renderHistory() {
         
         row.addEventListener('click', (e) => {
             if (e.target.classList.contains('del-btn')) return;
-            keywordInput.value = item.keyword;
+
+            // Memulihkan konsep input dinamis dari teks riwayat (Misal: "A AND B")
+            const parts = item.keyword.split(" AND ");
+            container.innerHTML = ''; // Reset kontainer
+
+            parts.forEach((part, index) => {
+                if (index > 0) {
+                    const andLabel = document.createElement('div');
+                    andLabel.className = "flex items-center justify-center my-2 and-divider";
+                    andLabel.innerHTML = `
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
+                        <span class="px-3 text-xs font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
+                    `;
+                    container.appendChild(andLabel);
+                }
+
+                const inputRow = document.createElement('div');
+                const isFirst = index === 0;
+                inputRow.className = isFirst 
+                    ? "flex items-center gap-3 transition-all duration-300"
+                    : "flex items-center gap-3 input-row transition-all duration-300";
+
+                inputRow.className = isFirst 
+                    ? "flex flex-col gap-1 w-full transition-all duration-300"
+                    : "flex items-end gap-2 input-row transition-all duration-300 w-full";
+
+                inputRow.innerHTML = `
+                    <div class="flex flex-col gap-1 flex-grow">
+                        <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${index + 1}</span>
+                        <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" value="${part}">
+                    </div>
+                    ${isFirst ? '' : `
+                    <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>`}
+                `;
+
+                container.appendChild(inputRow);
+
+                if (!isFirst) {
+                    inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
+                        inputRow.previousSibling.remove(); // Hapus divider AND sebelumnya
+                        inputRow.remove();
+                        reindexConcepts();
+                    });
+                }
+            });
+
             menuSearch.click();
-            fetchSynonyms(item.keyword);
+            fetchSynonyms(null); // Gunakan null agar membaca langsung dari input-input yang baru dipulihkan
         });
 
         row.querySelector('.del-btn').addEventListener('click', async (e) => {
@@ -542,7 +659,6 @@ async function renderHistory() {
     });
 }
 
-// Fungsi Memuat Daftar Favorit dari Supabase
 async function renderFavorites() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
@@ -558,8 +674,7 @@ async function renderFavorites() {
         const row = document.createElement('div');
         row.className = "flex justify-between items-center py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 rounded-xl transition cursor-pointer group";
         
-        // Memotong tampilan teks query agar tidak merusak tata letak baris tabel
-        const cleanDisplayResult = item.result ? item.result.replace('TITLE-ABS-KEY (', '').replace(')', '') : '';
+        const cleanDisplayResult = item.result ? item.result.replace(/TITLE-ABS-KEY\s*\(/g, '').replace(/\)/g, '') : '';
 
         row.innerHTML = `
             <div class="flex justify-between items-center w-full">
@@ -575,17 +690,77 @@ async function renderFavorites() {
 
         row.addEventListener('click', (e) => {
             if (e.target.classList.contains('del-fav')) return;
-            keywordInput.value = item.keyword;
+
+            // Cari semua bagian TITLE-ABS-KEY di dalam query
+            const groupRegex = /TITLE-ABS-KEY\s*\(([^)]+)\)/g;
+            let matches;
+            const reconstructData = {};
+
+            let conceptCounter = 1;
+            while ((matches = groupRegex.exec(item.result)) !== null) {
+                const groupContent = matches[1];
+                // Ekstrak kata-kata yang dibungkus tanda kutip
+                const wordMatches = groupContent.match(/"([^"]+)"/g);
+                if (wordMatches) {
+                    const cleanWords = wordMatches.map(w => w.replace(/"/g, ''));
+                    const originalConcept = cleanWords[0]; // Kata pertama adalah kata asal
+                    const synonyms = cleanWords.slice(1);
+                    reconstructData[originalConcept] = synonyms;
+                }
+            }
+
+            // Pulihkan ke kotak input di halaman utama pencarian
+            container.innerHTML = '';
+            const concepts = Object.keys(reconstructData);
+
+            concepts.forEach((concept, index) => {
+                if (index > 0) {
+                    const andLabel = document.createElement('div');
+                    andLabel.className = "flex items-center justify-center my-2 and-divider";
+                    andLabel.innerHTML = `
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
+                        <span class="px-3 text-xs font-black text-slate-400 dark:text-slate-500 tracking-widest">AND</span>
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow"></div>
+                    `;
+                    container.appendChild(andLabel);
+                }
+
+                const inputRow = document.createElement('div');
+                const isFirst = index === 0;
+                inputRow.className = isFirst 
+                    ? "flex items-center gap-3 transition-all duration-300"
+                    : "flex items-center gap-3 input-row transition-all duration-300";
+
+                inputRow.className = isFirst 
+                    ? "flex flex-col gap-1 w-full transition-all duration-300"
+                    : "flex items-end gap-2 input-row transition-all duration-300 w-full";
+
+                inputRow.innerHTML = `
+                    <div class="flex flex-col gap-1 flex-grow">
+                        <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${index + 1}</span>
+                        <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" value="${concept}">
+                    </div>
+                    ${isFirst ? '' : `
+                    <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>`}
+                `;
+
+                container.appendChild(inputRow);
+
+                if (!isFirst) {
+                    inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
+                        inputRow.previousSibling.remove();
+                        inputRow.remove();
+                        reindexConcepts();
+                    });
+                }
+            });
+
             menuSearch.click();
-            
-            // Ekstrak kata-kata di dalam tanda kutip untuk mengembalikan badge tombol satuan
-            const matches = item.result ? item.result.match(/"([^"]+)"/g) : [];
-            const cleanWords = matches ? matches.map(w => w.replace(/"/g, '')) : [];
-            
-            // Buang elemen kata kunci utama dari deretan kata sinonim badge
-            const finalSynonymsArr = cleanWords.filter(w => w.toLowerCase() !== item.keyword.toLowerCase());
-            
-            displayGeneratedKeywords(item.keyword, finalSynonymsArr);
+            renderMultiTopicResults(reconstructData, true); // Render badge tanpa perlu menembak API ulang
         });
 
         row.querySelector('.del-fav').addEventListener('click', async (e) => {
@@ -599,7 +774,6 @@ async function renderFavorites() {
     });
 }
 
-// Tombol Hapus Massal Riwayat
 if (clearHistoryBtn) {
     clearHistoryBtn.addEventListener('click', async () => {
         if (!confirm('Are you sure you want to clear your entire search history?')) return;
@@ -610,7 +784,6 @@ if (clearHistoryBtn) {
     });
 }
 
-// Tombol Hapus Massal Favorit
 if (clearFavoritesBtn) {
     clearFavoritesBtn.addEventListener('click', async () => {
         if (!confirm('Are you sure you want to clear all your favorite keywords?')) return;
@@ -621,7 +794,6 @@ if (clearFavoritesBtn) {
     });
 }
 
-// Fungsi Dasar Download CSV
 function downloadCSV(filename, dataHeaders, rowsArray) {
     let csvContent = "data:text/csv;charset=utf-8," + dataHeaders.join(",") + "\n" + rowsArray.map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -633,7 +805,6 @@ function downloadCSV(filename, dataHeaders, rowsArray) {
     document.body.removeChild(link);
 }
 
-// Export CSV Riwayat
 if (exportHistoryBtn) {
     exportHistoryBtn.addEventListener('click', async () => {
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -644,7 +815,6 @@ if (exportHistoryBtn) {
     });
 }
 
-// Export CSV Favorit
 if (exportFavoritesBtn) {
     exportFavoritesBtn.addEventListener('click', async () => {
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -655,9 +825,8 @@ if (exportFavoritesBtn) {
     });
 }
 
-// KODE AUTO-LOGIN 
+// 8. KODE AUTO-LOGIN SINKRONISASI
 async function checkCurrentSession() {
-    // 1. Cek apakah ada sesi login aktif di browser dari Supabase
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     
     if (error) {
@@ -665,33 +834,21 @@ async function checkCurrentSession() {
         return;
     }
 
-    // 2. Jika user sudah login sebelumnya
     if (session && session.user) {
         console.log("Sesi aktif ditemukan:", session.user.email);
         
-        const authSection = document.getElementById('authSection');
-        const mainAppSection = document.getElementById('mainAppSection');
-        
-        // Sembunyikan halaman login, langsung buka dashboard utama
         if (authSection) authSection.classList.add('hidden');
         if (mainAppSection) mainAppSection.classList.remove('hidden');
         
-        // 3. Sinkronisasi nama email di pojok kanan/kiri atas
         if (userDisplayEmail) {
             userDisplayEmail.textContent = (session.user.user_metadata?.full_name) 
                 ? session.user.user_metadata.full_name 
                 : session.user.email;
         }
         
-        // 4. Otomatis jalankan fungsi muat riwayat data agar langsung muncul
         if (typeof handleResize === 'function') handleResize();
         if (typeof renderHistory === 'function') renderHistory();
     } else {
         console.log("Tidak ada sesi aktif, silakan login.");
     }
 }
-
-// Jalankan pengecekan otomatis setiap kali halaman web di-refresh atau dibuka
-//document.addEventListener('DOMContentLoaded', () => {
- //   checkCurrentSession();
-//});
