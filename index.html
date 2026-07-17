@@ -15,9 +15,10 @@
 
     <!-- AUTH SECTION -->
     <div id="authSection" class="container mx-auto max-w-md px-4 py-20">
-        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+        <!-- FORM SIGN IN (TAMPILAN AWAL) -->
+        <div id="signInFormCard" class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
             <h1 class="text-3xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-2 tracking-tight">KeyMatch</h1>
-            <p class="text-slate-400 text-xs mb-6">Please sign in or register to use KeyMatch</p>
+            <p class="text-slate-400 text-xs mb-6">Please sign in to use KeyMatch</p>
             
             <div class="space-y-4 text-left">
                 <div>
@@ -31,24 +32,62 @@
                         <input type="password" id="authPassword" placeholder="••••••••" 
                                class="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
                         <button type="button" id="togglePasswordVisibility" class="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none">
-                            <!-- SVG Eye Icon -->
                             <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-1.5 italic leading-tight">
-                        *Password details: Minimum 6 characters (letters, numbers, or symbols).
-                    </p>
                 </div>
                 
                 <button id="loginBtn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-all duration-200 active:scale-[0.99] shadow-sm">
                     Sign In
                 </button>
-                <button id="registerBtn" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 text-slate-700 font-medium py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.99]">
-                    Don't have an account? Register New
+
+                <!-- GARIS PEMBATAS DECORATIVE -->
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                    <span class="flex-shrink mx-4 text-slate-400 text-xs font-medium uppercase">Or</span>
+                    <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                </div>
+                
+                <div class="text-center pt-2">
+                    <button id="goToRegisterBtn" type="button" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold focus:outline-none">
+                        Don't have an account? Register New
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM REGISTRASI -->
+        <div id="registerFormCard" class="hidden bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+            <h1 class="text-3xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-2 tracking-tight">Create Account</h1>
+            <p class="text-slate-400 text-xs mb-6">Join KeyMatch to power up your Scopus research</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
+                    <input type="email" id="regEmail" placeholder="yourname@gmail.com" 
+                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Password</label>
+                    <input type="password" id="regPassword" placeholder="••••••••" 
+                           class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150">
+                    <p class="text-[11px] text-slate-400 mt-1.5 italic leading-tight">
+                        *Minimum 6 characters (letters, numbers, or symbols).
+                    </p>
+                </div>
+                
+                <button id="registerBtn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-all duration-200 active:scale-[0.99] shadow-sm">
+                    Register Account
                 </button>
+                
+                <div class="text-center pt-2">
+                    <button id="goToLoginBtn" type="button" class="text-xs text-slate-500 dark:text-slate-400 hover:underline font-semibold focus:outline-none">
+                        ← Already have an account? Sign In
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -140,16 +179,17 @@
                 <!-- KONTAINER PENCARIAN DINAMIS -->
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                     <div id="dynamicInputContainer" class="space-y-3">
-                        <div class="flex items-end gap-2 input-row transition-all duration-300 w-full" id="row-1">
-                            <div class="flex flex-col gap-1 flex-grow">
-                                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword 1</span>
-                                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first keyword (e.g., smart city)">
+                        <!-- Keyword 1 dengan Silang Eksklusif di Dalam Kotak -->
+                        <div class="flex flex-col gap-1 w-full" id="row-1">
+                            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword 1</span>
+                            <div class="relative w-full flex items-center">
+                                <input type="text" class="keyword-input w-full pl-4 pr-10 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first keyword (e.g., smart city)">
+                                <button type="button" class="remove-input-btn absolute right-3 text-slate-400 hover:text-indigo-500 transition focus:outline-none" title="Clear text">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
                             </div>
-                            <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
                         </div>
                     </div>
 
