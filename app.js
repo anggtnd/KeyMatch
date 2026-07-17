@@ -33,6 +33,7 @@ const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const toggleSidebarLaptopBtn = document.getElementById('toggleSidebarLaptopBtn');
 const closeSidebarBtn = document.getElementById('closeSidebarBtn');
 const sidebarAside = document.getElementById('sidebarAside');
+const mainContentArea = document.getElementById('mainContentArea');
 
 const menuSearch = document.getElementById('menuSearch');
 const menuFavorites = document.getElementById('menuFavorites');
@@ -124,7 +125,7 @@ logoutBtn.addEventListener('click', async () => {
     showAuthForm();
     authEmail.value = ''; authPassword.value = '';
     
-    // PERBAIKAN 1: Reset container menggunakan struktur "Keyword 1" yang seragam dan bisa dihapus
+    // Reset container menggunakan struktur "Keyword 1" yang seragam dan bisa dihapus
     container.innerHTML = `
         <div class="flex items-end gap-2 input-row transition-all duration-300 w-full" id="row-1">
             <div class="flex flex-col gap-1 flex-grow">
@@ -150,7 +151,7 @@ function showMainApp(email) {
         userDisplayEmail.textContent = (user?.user_metadata?.full_name) ? user.user_metadata.full_name : email;
     });
     
-    // PERBAIKAN 2: Memaksa pembaruan data profil baru saat login sukses
+    // Memaksa pembaruan data profil baru saat login sukses
     loadUserProfileData();
     handleResize();
 }
@@ -161,6 +162,7 @@ function showAuthForm() {
 }
 
 // 4. PENGATURAN INPUT DINAMIS & LOGIKA PENCARIAN (AI)
+
 // Fungsi mengurutkan nomor Keyword & mengelola divider AND secara dinamis
 function reindexConcepts() {
     const rows = container.querySelectorAll('.input-row, #row-1');
@@ -314,7 +316,7 @@ Example format:
         const aiOutput = JSON.parse(jsonMatch[0]);
         loading.classList.add('hidden');
 
-        // Render data hasil AI ke antarmuka pengguna
+        // Render data hasil AI ke antarmuka pengguna (DIPERBAIKI DISINI)
         renderMultiTopicResults(aiOutput, forcedWord);
         showToastNotification('Advanced query mapping generated successfully!');
 
@@ -332,7 +334,7 @@ Example format:
         });
         renderMultiTopicResults(fallbackOutput, forcedWord);
         
-        // PERBAIKAN 3: Matikan pesan cadangan, ganti dengan respon sukses agar silent
+        // Matikan pesan cadangan, ganti dengan respon sukses agar silent
         showToastNotification('Advanced query mapping generated successfully!'); 
     }
 }
@@ -352,7 +354,7 @@ async function renderMultiTopicResults(data, isForcedHistory = false) {
         const groupWrapper = document.createElement('div');
         groupWrapper.className = "p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-3 w-full";
         
-        // PERBAIKAN 4: Ganti teks judul grup dari "Concept" menjadi "Keyword"
+        // Ganti teks judul grup dari "Concept" menjadi "Keyword"
         groupWrapper.innerHTML = `
             <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Keyword ${index + 1}: ${concept}</h4>
             <div class="flex flex-wrap gap-2 badge-pool"></div>
@@ -424,25 +426,96 @@ function showToastNotification(message) {
     setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 2500);
 }
 
-// 5. NAVIGASI SIDEBAR & RESPONSIVITAS
-if(toggleSidebarBtn) toggleSidebarBtn.addEventListener('click', toggleSidebar);
-if(toggleSidebarLaptopBtn) toggleSidebarLaptopBtn.addEventListener('click', toggleSidebar);
-if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
+// 5. NAVIGASI SIDEBAR & RESPONSIVITAS (FIX CENTERED CONTENT)
+if (toggleSidebarBtn) {
+    toggleSidebarBtn.addEventListener('click', openSidebar);
+}
+if (toggleSidebarLaptopBtn) {
+    toggleSidebarLaptopBtn.addEventListener('click', toggleSidebar);
+}
+if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+}
 
-function toggleSidebar() { sidebarAside.classList.toggle('-translate-x-full'); }
+// Membuka sidebar (Kembalikan fisik sidebar di samping konten)
+function openSidebar() {
+    // 1. Tampilkan kembali fisik sidebar di layar
+    sidebarAside.style.display = "flex";
+    
+    // 2. Berikan sedikit jeda mikro agar efek transisi animasi geser halusnya terlihat
+    setTimeout(() => {
+        sidebarAside.style.transform = "translateX(0)";
+        sidebarAside.classList.remove('-translate-x-full');
+    }, 10);
+    
+    // 3. Kembalikan lebar standar agar pas bersandingan
+    if (mainContentArea) {
+        mainContentArea.classList.remove('max-w-7xl');
+        mainContentArea.classList.add('max-w-4xl');
+    }
+}
 
+// Menutup sidebar (Sembunyikan fisik sidebar agar konten ke tengah)
+function closeSidebar() {
+    // 1. Geser sidebar terlebih dahulu ke kiri luar layar
+    sidebarAside.style.transform = "translateX(-100%)";
+    sidebarAside.classList.add('-translate-x-full');
+    
+    // 2. Hilangkan "ruang hantu" fisiknya setelah animasi geser selesai (300ms)
+    setTimeout(() => {
+        if (sidebarAside.classList.contains('-translate-x-full')) {
+            sidebarAside.style.display = "none";
+        }
+    }, 300); // 300ms sesuai dengan duration-300 di HTML
+    
+    // 3. Lebarkan halaman utama ke tengah layar secara penuh
+    if (mainContentArea) {
+        mainContentArea.classList.remove('max-w-4xl');
+        mainContentArea.classList.add('max-w-7xl');
+    }
+}
+
+// Fungsi toggle (buka/tutup bergantian)
+function toggleSidebar() {
+    const isHidden = sidebarAside.classList.contains('-translate-x-full') || sidebarAside.style.transform === "translateX(-100%)" || sidebarAside.style.display === "none";
+    if (isHidden) {
+        openSidebar();
+    } else {
+        closeSidebar();
+    }
+}
+
+// Mengatur otomatis tampilan saat ukuran layar berubah
 function handleResize() {
-    if (window.innerWidth >= 768) sidebarAside.classList.remove('-translate-x-full');
-    else sidebarAside.classList.add('-translate-x-full');
+    if (window.innerWidth >= 768) {
+        // Layar Laptop: Tampilkan secara normal di samping
+        sidebarAside.style.display = "flex";
+        sidebarAside.style.transform = "none";
+        sidebarAside.classList.remove('-translate-x-full');
+        if (mainContentArea) {
+            mainContentArea.classList.remove('max-w-7xl');
+            mainContentArea.classList.add('max-w-4xl');
+        }
+    } else {
+        // Layar HP: Sembunyikan sidebar
+        closeSidebar();
+    }
 }
 window.addEventListener('resize', handleResize);
 
+// Reset menu styles & tutup otomatis di HP
 function resetMenuStyles() {
     [menuSearch, menuFavorites, menuHistory, menuProfile].forEach(btn => {
         if(btn) btn.className = "w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium rounded-xl text-sm text-left transition-all duration-150";
     });
-    pageSearch.classList.add('hidden'); pageFavorites.classList.add('hidden'); pageHistory.classList.add('hidden'); pageProfile.classList.add('hidden');
-    if (window.innerWidth < 768) sidebarAside.classList.add('-translate-x-full');
+    pageSearch.classList.add('hidden'); 
+    pageFavorites.classList.add('hidden'); 
+    pageHistory.classList.add('hidden'); 
+    pageProfile.classList.add('hidden');
+    
+    if (window.innerWidth < 768) {
+        closeSidebar();
+    }
 }
 
 menuSearch.addEventListener('click', () => {
