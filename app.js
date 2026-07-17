@@ -6,10 +6,18 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 2. AMBIL ELEMEN HTML
 const authSection = document.getElementById('authSection');
+const signInFormCard = document.getElementById('signInFormCard');
+const registerFormCard = document.getElementById('registerFormCard');
+
 const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
+const regEmail = document.getElementById('regEmail');
+const regPassword = document.getElementById('regPassword');
+
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
+const goToRegisterBtn = document.getElementById('goToRegisterBtn');
+const goToLoginBtn = document.getElementById('goToLoginBtn');
 const togglePasswordBtn = document.getElementById('togglePasswordVisibility');
 
 const mainAppSection = document.getElementById('mainAppSection');
@@ -67,6 +75,8 @@ const darkModeStatus = document.getElementById('darkModeStatus');
 let currentSavedName = '';
 
 // 3. LOGIKA AUTHENTICATION & INTERAKSI MATA PASSWORD
+
+// A. Fitur Intip Mata Password 
 if (togglePasswordBtn && authPassword) {
     togglePasswordBtn.addEventListener('click', function () {
         const type = authPassword.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -83,6 +93,56 @@ if (togglePasswordBtn && authPassword) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>`;
+        }
+    });
+}
+
+// B. Logika Navigasi Pindah Form
+if (goToRegisterBtn) {
+    goToRegisterBtn.addEventListener('click', () => {
+        signInFormCard.classList.add('hidden');
+        registerFormCard.classList.remove('hidden');
+    });
+}
+
+if (goToLoginBtn) {
+    goToLoginBtn.addEventListener('click', () => {
+        registerFormCard.classList.add('hidden');
+        signInFormCard.classList.remove('hidden');
+    });
+}
+
+// C. Logika Eksekusi Register Akun Baru 
+// Proses Registrasi Baru (Perbaikan Alur Pindah Halaman)
+if (registerBtn) {
+    registerBtn.addEventListener('click', async () => {
+        const email = regEmail.value.trim();
+        const password = regPassword.value.trim();
+        
+        if (!email || !password) return alert('Email and password must be filled!');
+        if (password.length < 6) return alert('Password must be at least 6 characters!');
+
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        
+        if (error) {
+            alert(error.message.includes("already registered") ? 'This email is already registered!' : 'Registration failed: ' + error.message);
+        } else {
+            // 1. Tampilkan notifikasi sukses terlebih dahulu
+            alert('Registration successful! You can now sign in.');
+            
+            // 2. PERBAIKAN: Efek otomatisasi setelah user klik "OK" pada alert
+            // Kita pindahkan email yang baru didaftar ke kolom login agar otomatis terisi!
+            if (authEmail) authEmail.value = email;
+            if (authPassword) authPassword.value = ''; // Biarkan password kosong demi keamanan
+            
+            // 3. Bersihkan form registrasi lama agar kosong kembali
+            regEmail.value = ''; 
+            regPassword.value = '';
+            
+            // 4. Pindahkan tampilan ke halaman Sign In secara resmi
+            if (goToLoginBtn) {
+                goToLoginBtn.click();
+            }
         }
     });
 }
@@ -125,18 +185,18 @@ logoutBtn.addEventListener('click', async () => {
     showAuthForm();
     authEmail.value = ''; authPassword.value = '';
     
-    // Reset container menggunakan struktur "Keyword 1" yang seragam dan bisa dihapus
+    // Reset container menggunakan struktur Silang Dalam Kotak
     container.innerHTML = `
-        <div class="flex items-end gap-2 input-row transition-all duration-300 w-full" id="row-1">
-            <div class="flex flex-col gap-1 flex-grow">
-                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword 1</span>
-                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first keyword (e.g., smart city)">
+        <div class="flex flex-col gap-1 w-full" id="row-1">
+            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword 1</span>
+            <div class="relative w-full flex items-center">
+                <input type="text" class="keyword-input w-full pl-4 pr-10 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter first keyword (e.g., smart city)">
+                <button type="button" class="remove-input-btn absolute right-3 text-slate-400 hover:text-indigo-500 transition focus:outline-none" title="Clear text">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
-            <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-            </button>
         </div>`;
     
     initFirstRow();
@@ -191,15 +251,18 @@ function reindexConcepts() {
     });
 }
 
-// Aktifkan tombol hapus pada baris pertama (Keyword 1)
+// Aktifkan tombol bersihkan (clear text) khusus pada baris pertama (Keyword 1)
 function initFirstRow() {
     const firstRow = document.getElementById('row-1');
     if (firstRow) {
-        const deleteBtn = firstRow.querySelector('.remove-input-btn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
-                firstRow.remove();
-                reindexConcepts();
+        const clearBtn = firstRow.querySelector('.remove-input-btn');
+        const inputField = firstRow.querySelector('.keyword-input');
+        
+        if (clearBtn && inputField) {
+            // Hanya menghapus teks di dalamnya saja, tidak menghapus barisnya
+            clearBtn.addEventListener('click', () => {
+                inputField.value = '';
+                inputField.focus();
             });
         }
     }
@@ -211,24 +274,23 @@ if (addBtn) {
         const currentInputs = container.querySelectorAll('.keyword-input').length;
         const nextIndex = currentInputs + 1;
 
-        // Baris input baru
+        // Baris input baru ultra profesional
         const inputRow = document.createElement('div');
-        inputRow.className = "flex items-end gap-2 input-row transition-all duration-300 w-full";
+        inputRow.className = "flex flex-col gap-1 w-full input-row transition-all duration-300";
         inputRow.innerHTML = `
-            <div class="flex flex-col gap-1 flex-grow">
-                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${nextIndex}</span>
-                <input type="text" class="keyword-input w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter keyword...">
+            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Keyword ${nextIndex}</span>
+            <div class="relative w-full flex items-center">
+                <input type="text" class="keyword-input w-full pl-4 pr-10 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-150 select-text" placeholder="Enter keyword...">
+                <button type="button" class="remove-input-btn absolute right-3 text-slate-400 hover:text-rose-500 transition focus:outline-none" title="Remove keyword">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
-            <button type="button" class="remove-input-btn p-2 text-slate-400 hover:text-rose-500 transition rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-            </button>
         `;
 
         container.appendChild(inputRow);
         
-        // Aktifkan fungsi hapus untuk baris baru
         inputRow.querySelector('.remove-input-btn').addEventListener('click', () => {
             inputRow.remove();
             reindexConcepts();
@@ -280,7 +342,7 @@ async function fetchSynonyms(forcedWord = null) {
     try {
         const apiUrl = "https://text.pollinations.ai/";
         
-        // Perintah ke AI agar memberikan 10 sinonim/padanan kata ilmiah
+        // PERBAIKAN: Perintah ke AI diubah dengan tegas agar memberikan 10 sinonim/padanan kata ilmiah
         const systemPrompt = `You are a Scopus literature mapping expert.
 Your job is to analyze the user's concepts and provide exactly 10 key synonyms, equivalent academic terms, or related research phrases for EACH concept provided.
 Rules:
@@ -317,7 +379,7 @@ Example format:
         const aiOutput = JSON.parse(jsonMatch[0]);
         loading.classList.add('hidden');
 
-        // Panggil fungsi render utama dengan data dari AI yang sudah lengkap
+        // PERBAIKAN: Panggil fungsi render utama dengan data dari AI yang sudah lengkap
         renderMultiTopicResults(aiOutput, forcedWord);
         showToastNotification('Advanced query mapping generated successfully!');
 
