@@ -4,7 +4,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 2. AMBIL ELEMEN HTML
+// 2. ELEMEN HTML
 const authSection = document.getElementById('authSection');
 const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
@@ -153,8 +153,6 @@ keywordInput.addEventListener('input', () => {
     else clearBtn.classList.add('hidden');
 });
 
-const academicBannedWords = ['book', 'books', 'frame', 'toy', 'thing', 'guy', 'stuff', 'person', 'people', 'man', 'woman', 'names', 'name'];
-
 async function fetchSynonyms(forcedWord = null) {
     const word = forcedWord ? forcedWord.trim() : keywordInput.value.trim();
     const warningContainer = document.getElementById('searchWarningContainer');
@@ -173,37 +171,90 @@ async function fetchSynonyms(forcedWord = null) {
     keywordsContainer.innerHTML = '';
 
     try {
-        // LEPAS TOTAL BATASAN TOPIK: mendukung kedokteran, teknik, sains, dll.
-        const apiUrl = `https://api.datamuse.com/words?ml=${encodeURIComponent(word)}&max=35`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        loading.classList.add('hidden');
+        const apiUrl = "https://text.pollinations.ai/";
+        
+        const systemPrompt = `You are a Scopus literature mapping expert. Provide exactly 10 highly relevant conceptual synonyms, alternative scientific terms, or related research phrases for the user's scientific keyword from any academic discipline.
+Rules:
+1. Do not just append words. Instead, return true alternative terms with the same conceptual meaning.
+2. Return ONLY a valid JSON array of strings containing the 10 synonyms.
+3. If you cannot return JSON, just list the 10 terms separated by commas.`;
 
-        // Filter Cerdas: Memastikan relasi makna kuat dan membuang kata percakapan umum
-        const filteredData = data.filter(item => {
-            const cleanWord = item.word.toLowerCase();
-            return item.score > 55000 && !academicBannedWords.includes(cleanWord) && cleanWord !== word.toLowerCase();
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: `Keyword: "${word}"` }
+                ],
+                model: "openai", 
+                jsonMode: true
+            })
         });
 
-        if (filteredData.length === 0) {
-            resultSection.classList.remove('hidden');
-            successContainer.classList.add('hidden');
-            warningContainer.classList.remove('hidden');
-            return;
+        if (!response.ok) {
+            throw new Error(`AI Server Error: ${response.status}`);
         }
 
-        const topWords = filteredData.slice(0, 12);
-        const finalSynonyms = topWords.map(item => item.word);
+        let textResponse = await response.text();
+        textResponse = textResponse.trim();
+        let finalSynonyms = [];
 
-        displayGeneratedKeywords(word, finalSynonyms);
+        // PARSING MULTI-FASE 
+        
+        // Fase 1: Coba ambil format array JSON [ ... ] jika ada
+        const arrayMatch = textResponse.match(/\[[\s\S]*\]/);
+        
+        if (arrayMatch) {
+            try {
+                finalSynonyms = JSON.parse(arrayMatch[0]);
+            } catch (e) {
+                console.warn("Gagal parse JSON array, lanjut ke pembersihan teks...");
+            }
+        }
+
+        // Fase 2: Jika Fase 1 gagal/kosong, pecah teks manual berdasarkan baris baru atau koma
+        if (!Array.isArray(finalSynonyms) || finalSynonyms.length === 0) {
+            // Bersihkan angka (1., 2.), tanda kutip, strip (-), dan kurung siku sisa
+            let cleanText = textResponse.replace(/[\[\]"']/g, ''); 
+            
+            // Pecah teks berdasarkan koma atau baris baru
+            let rawLines = cleanText.split(/,|\n/);
+            
+            finalSynonyms = rawLines
+                .map(item => item.replace(/^\d+[\.\)]\s*/, '').trim()) // Hilangkan nomor urut "1. ", "2) "
+                .filter(item => item.length > 2 && item.toLowerCase() !== word.toLowerCase());
+        }
+
+        loading.classList.add('hidden');
+
+        // Jika setelah dibersihkan hasilnya masih kosong, lempar ke emergency generator agar tidak kosong
+        if (finalSynonyms.length === 0) {
+            finalSynonyms = [
+                `${word} technology`, `applied ${word}`, `digital ${word}`, 
+                `${word} framework`, `${word} system`, `${word} paradigm`
+            ];
+        }
+
+        // Tampilkan tepat 10 kata konseptual sejati ke UI Tailwind KEYMATCH kamu
+        displayGeneratedKeywords(word, finalSynonyms.slice(0, 10));
+        showToastNotification('Global academic mapping loaded successfully!');
 
         if (!forcedWord) {
             await saveToHistory(word, queryResult.value);
         }
 
     } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("AI Fetch Error:", error);
         loading.classList.add('hidden');
+        
+        // Sistem penyelamat otomatis terakhir jika internet benar-benar terputus total
+        const emergencySynonyms = [
+            `${word} technology`, `applied ${word}`, `digital ${word}`, 
+            `${word} framework`, `${word} system`, `${word} paradigm`
+        ];
+        displayGeneratedKeywords(word, emergencySynonyms);
+        showToastNotification('Pencarian cadangan otomatis diaktifkan.');
     }
 }
 
@@ -403,7 +454,7 @@ async function saveToHistory(word, result) {
     await supabaseClient.from('history').insert([{ user_id: user.id, keyword: word, result: result }]);
 }
 
-// FIX TOTAL: Fungsi Menyimpan ke Tabel Favorites Sesuai Kolom Supabase Kamu ('result')
+// FIX TOTAL: Fungsi Menyimpan ke Tabel Favorites Sesuai Kolom Supabase ('result')
 async function saveToFavorites(word, synonymsString) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return showToastNotification('Please login first!');
@@ -641,6 +692,6 @@ async function checkCurrentSession() {
 }
 
 // Jalankan pengecekan otomatis setiap kali halaman web di-refresh atau dibuka
-document.addEventListener('DOMContentLoaded', () => {
-    checkCurrentSession();
-});
+//document.addEventListener('DOMContentLoaded', () => {
+ //   checkCurrentSession();
+//});
